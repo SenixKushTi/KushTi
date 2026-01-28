@@ -97,7 +97,10 @@
                 <img id="a-poster" class="w-full md:w-64 rounded-2xl shadow-2xl aspect-[2/3] object-cover">
                 <div class="flex-1">
                     <h1 id="a-title" class="text-2xl font-black mb-2 uppercase">...</h1>
-                    <p id="avg-rating" class="text-orange-500 font-bold mb-4">⭐ 0.0</p>
+                    <div class="flex gap-4 mb-4">
+                        <p id="avg-rating" class="text-orange-500 font-bold">⭐ 0.0</p>
+                        <p id="views-count" class="text-blue-500 font-bold">👁 0</p>
+                    </div>
                     
                     <!-- ИСПРАВЛЕНО: Кнопка показывается только авторизованным -->
                     <button id="watch-btn" onclick="checkAuthAndWatch()" class="hidden mb-4 bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl transition-all transform hover:scale-105">
@@ -270,6 +273,25 @@
                 document.getElementById('a-poster').src = data.poster_url;
                 document.getElementById('a-title').innerText = data.title_kz || 'Атауы жоқ';
                 document.getElementById('a-desc').innerText = data.description_kz || 'Сипаттама жоқ';
+                
+                // Отображаем количество просмотров
+                const views = data.views || 0;
+                document.getElementById('views-count').innerText = `👁 ${views}`;
+
+                // Увеличиваем счетчик просмотров
+                const viewKey = `viewed_${animeId}`;
+                const alreadyViewed = sessionStorage.getItem(viewKey);
+                
+                if (!alreadyViewed) {
+                    try {
+                        await updateDoc(doc(db, "content", animeId), {
+                            views: increment(1)
+                        });
+                        sessionStorage.setItem(viewKey, 'true');
+                    } catch(e) {
+                        console.log('Views update error:', e);
+                    }
+                }
 
                 const hasVideo = (data.video_url && data.video_url.trim()) || (data.episodes && data.episodes.length > 0);
                 
@@ -298,6 +320,14 @@
                     s.forEach(d => total += d.data().stars);
                     const avg = s.size > 0 ? (total / s.size).toFixed(1) : '0.0';
                     document.getElementById('avg-rating').innerText = `⭐ ${avg}`;
+                });
+
+                // Подписка на обновление просмотров в реальном времени
+                onSnapshot(doc(db, "content", animeId), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const views = docSnap.data().views || 0;
+                        document.getElementById('views-count').innerText = `👁 ${views}`;
+                    }
                 });
 
                 document.getElementById('loading').classList.add('hidden');
