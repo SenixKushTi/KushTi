@@ -408,8 +408,6 @@
         };
 
         // Проверка уникальности никнейма
-
-        // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ - ЗАМЕНИ СТРОКИ 411-421 НА ЭТО:
         const isUsernameUnique = async (username) => {
             try {
                 const usersRef = collection(db, 'users');
@@ -418,21 +416,7 @@
                 return snapshot.empty;
             } catch (error) {
                 console.error('Username check error:', error);
-                
-                // УЛУЧШЕННАЯ ОБРАБОТКА ОШИБОК
-                if (error.code === 'failed-precondition') {
-                    // Ошибка отсутствия индекса - покажем ссылку
-                    console.error('🔴 НУЖЕН ИНДЕКС!', error.message);
-                    showToast('❗ Необходимо создать индекс. Смотри консоль (F12)', 'error');
-                } else if (error.code === 'permission-denied') {
-                    showToast('❗ Ошибка прав доступа Firestore', 'error');
-                } else {
-                    showToast('❗ Ошибка проверки никнейма: ' + error.message, 'error');
-                }
-                
-                // ⚠️ При ошибке разрешаем регистрацию (return true)
-                // Чтобы не блокировать всех пользователей из-за отсутствия индекса
-                return true;
+                return false;
             }
         };
 
@@ -456,11 +440,12 @@
                         return;
                     }
 
-                    const isUnique = await isUsernameUnique(validation.username);
-                    if (!isUnique) {
-                        showToast('Бұл никнейм қолданыста. Басқасын таңдаңыз!', 'error');
-                        return;
-                    }
+                    // ⚠️ ВРЕМЕННО ОТКЛЮЧЕНО - проверка username (нужен индекс в Firestore)
+                    // const isUnique = await isUsernameUnique(validation.username);
+                    // if (!isUnique) {
+                    //     showToast('Бұл никнейм қолданыста. Басқасын таңдаңыз!', 'error');
+                    //     return;
+                    // }
 
                     // Создание пользователя
                     const res = await createUserWithEmailAndPassword(auth, e, p);
