@@ -66,9 +66,7 @@
     <nav class="p-4 border-b sticky top-0 z-40 flex justify-between items-center backdrop-blur-lg">
         <div class="flex items-center gap-3">
             <!-- Логотип -->
-            <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-lg">
-                K
-            </div>
+            <img src="KushTi_new_Logo__1_.png" alt="Kushti Logo" class="w-10 h-10 object-contain">
             <h1 class="text-2xl md:text-3xl font-black text-white italic uppercase">Kushti</h1>
         </div>
         <div class="flex gap-4 items-center">
@@ -153,17 +151,17 @@
 
     <!-- Модальное окно авторизации -->
     <div id="auth-m" class="hidden fixed inset-0 bg-black/90 flex justify-center items-center z-[100] p-4">
-        <div id="modal-container" class="p-6 rounded-3xl w-full max-w-sm border">
+        <div id="modal-container" class="bg-zinc-900 p-6 rounded-3xl w-full max-w-sm border border-zinc-800">
             <h2 id="m-t" class="text-xl font-bold mb-6 text-orange-500 text-center uppercase">Кіру</h2>
             <div id="reg-fields" class="hidden">
-                <input type="text" id="m-un" placeholder="Никнейм" class="w-full p-4 rounded-xl mb-3 outline-none border focus:border-orange-500">
-                <p class="text-[10px] mb-3 opacity-60">Никнейм: 3-20 символ, тек әріптер/сандар</p>
+                <input type="text" id="m-un" placeholder="Никнейм" class="w-full p-4 rounded-xl mb-3 outline-none border border-zinc-700 bg-zinc-800 text-white focus:border-orange-500">
+                <p class="text-[10px] mb-3 opacity-60 text-white">Никнейм: 3-20 символ, тек әріптер/сандар</p>
             </div>
-            <input type="email" id="m-e" placeholder="Email" class="w-full p-4 rounded-xl mb-3 outline-none border focus:border-orange-500">
-            <input type="password" id="m-p" placeholder="Құпия сөз (мин. 6 символ)" class="w-full p-4 rounded-xl mb-6 outline-none border focus:border-orange-500">
+            <input type="email" id="m-e" placeholder="Email" class="w-full p-4 rounded-xl mb-3 outline-none border border-zinc-700 bg-zinc-800 text-white focus:border-orange-500">
+            <input type="password" id="m-p" placeholder="Құпия сөз (мин. 6 символ)" class="w-full p-4 rounded-xl mb-6 outline-none border border-zinc-700 bg-zinc-800 text-white focus:border-orange-500">
             <button onclick="authAcc()" id="m-b" class="w-full bg-orange-600 py-4 rounded-xl font-black uppercase tracking-widest text-white">Растау</button>
-            <p id="toggle-text" class="mt-4 text-center text-xs opacity-60">Аккаунт жоқ па? <span onclick="toggleMode()" class="text-orange-500 cursor-pointer">Тіркелу</span></p>
-            <button onclick="closeM()" class="w-full mt-4 text-[10px] opacity-40 uppercase">Жабу</button>
+            <p id="toggle-text" class="mt-4 text-center text-xs opacity-60 text-white">Аккаунт жоқ па? <span onclick="toggleMode()" class="text-orange-500 cursor-pointer">Тіркелу</span></p>
+            <button onclick="closeM()" class="w-full mt-4 text-[10px] opacity-40 uppercase text-white">Жабу</button>
         </div>
     </div>
 
