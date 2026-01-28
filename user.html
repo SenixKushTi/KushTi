@@ -17,38 +17,44 @@
         .error-icon { font-size: 64px; color: #ea580c; margin-bottom: 20px; }
     </style>
 </head>
-<body class="min-h-screen transition-colors duration-300">
+<body class="min-h-screen bg-black text-white transition-colors duration-300">
     <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm z-50">
         <i class="fas fa-wifi-slash mr-2"></i>Интернет байланысы жоқ
     </div>
 
-    <nav class="p-4 border-b flex justify-between items-center sticky top-0 z-50 backdrop-blur-lg">
+    <nav class="p-4 border-b border-zinc-800 flex justify-between items-center sticky top-0 z-50 bg-zinc-900 backdrop-blur-lg">
         <button onclick="history.back()" class="text-orange-500 font-bold">← АРТҚА</button>
         <span class="font-black italic text-orange-500">Kushti</span>
         <div class="flex gap-3 items-center">
             <button id="admin-btn" onclick="location.href='admin.html'" class="hidden text-orange-500" title="Админ панель"><i class="fas fa-shield-alt"></i></button>
-            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon text-white"></i></button>
         </div>
     </nav>
 
     <main class="max-w-4xl mx-auto p-6">
-        <div id="loading" class="loader"></div>
+        <!-- Loader -->
+        <div id="loading">
+            <div class="loader"></div>
+            <p class="text-center text-sm opacity-70 mt-4">Профиль жүктелуде...</p>
+        </div>
         
         <!-- Error Container -->
         <div id="error-container" class="hidden error-container">
             <i class="fas fa-user-slash error-icon"></i>
             <h2 class="text-2xl font-bold text-orange-500 mb-4">Пайдаланушы табылмады</h2>
-            <p class="text-sm opacity-70 mb-6">Бұл профиль жоқ немесе жойылған</p>
+            <p class="text-sm opacity-70 mb-2" id="error-message">Бұл профиль жоқ немесе жойылған</p>
+            <p class="text-xs opacity-50 mb-6" id="error-details"></p>
             <button onclick="location.href='index.html'" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">
                 Басты бетке оралу
             </button>
         </div>
         
+        <!-- Profile Content -->
         <div id="profile-content" class="hidden">
-            <div class="rounded-[40px] p-8 border mb-6">
+            <div class="rounded-[40px] p-8 border border-zinc-800 mb-6">
                 <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
                     <div id="user-avatar-container" class="w-32 h-32 bg-gradient-to-br from-orange-600 to-orange-800 rounded-full flex items-center justify-center text-5xl font-black text-white">
-                        <span id="user-avatar"></span>
+                        <span id="user-avatar">U</span>
                     </div>
                     
                     <div class="flex-1 text-center md:text-left">
@@ -72,39 +78,39 @@
             </div>
 
             <div class="grid md:grid-cols-3 gap-4 mb-6">
-                <div class="p-6 rounded-2xl border text-center">
+                <div class="p-6 rounded-2xl border border-zinc-800 text-center">
                     <div class="text-3xl font-black text-orange-500 mb-2" id="comments-count">0</div>
                     <div class="text-sm opacity-70">Пікірлер</div>
                 </div>
-                <div class="p-6 rounded-2xl border text-center">
+                <div class="p-6 rounded-2xl border border-zinc-800 text-center">
                     <div class="text-3xl font-black text-orange-500 mb-2" id="ratings-count">0</div>
                     <div class="text-sm opacity-70">Бағалар</div>
                 </div>
-                <div class="p-6 rounded-2xl border text-center">
+                <div class="p-6 rounded-2xl border border-zinc-800 text-center">
                     <div class="text-3xl font-black text-orange-500 mb-2" id="avg-rating">0.0</div>
                     <div class="text-sm opacity-70">Орташа баға</div>
                 </div>
             </div>
 
-            <div class="mb-6 p-6 rounded-3xl border">
+            <div class="mb-6 p-6 rounded-3xl border border-zinc-800">
                 <h2 class="text-xl font-bold text-orange-500 mb-4">Коллекциялар</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div class="p-4 rounded-xl border text-center">
+                    <div class="p-4 rounded-xl border border-zinc-800 text-center">
                         <i class="fas fa-play-circle text-2xl text-orange-500 mb-2"></i>
                         <p class="text-xs font-bold">Қарап жатыр</p>
                         <p id="count-watching" class="text-xl font-black text-orange-500">0</p>
                     </div>
-                    <div class="p-4 rounded-xl border text-center">
+                    <div class="p-4 rounded-xl border border-zinc-800 text-center">
                         <i class="fas fa-heart text-2xl text-red-500 mb-2"></i>
                         <p class="text-xs font-bold">Сүйіктілер</p>
                         <p id="count-favorite" class="text-xl font-black text-red-500">0</p>
                     </div>
-                    <div class="p-4 rounded-xl border text-center">
+                    <div class="p-4 rounded-xl border border-zinc-800 text-center">
                         <i class="fas fa-check-circle text-2xl text-green-500 mb-2"></i>
                         <p class="text-xs font-bold">Көрді</p>
                         <p id="count-completed" class="text-xl font-black text-green-500">0</p>
                     </div>
-                    <div class="p-4 rounded-xl border text-center">
+                    <div class="p-4 rounded-xl border border-zinc-800 text-center">
                         <i class="fas fa-clock text-2xl text-blue-500 mb-2"></i>
                         <p class="text-xs font-bold">Жоспарда</p>
                         <p id="count-planned" class="text-xl font-black text-blue-500">0</p>
@@ -112,12 +118,12 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl p-6 border mb-6">
+            <div class="rounded-2xl p-6 border border-zinc-800 mb-6">
                 <h2 class="text-xl font-bold text-orange-500 mb-4">Бағалары</h2>
                 <div id="user-ratings" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
             </div>
 
-            <div class="rounded-2xl p-6 border">
+            <div class="rounded-2xl p-6 border border-zinc-800">
                 <h2 class="text-xl font-bold text-orange-500 mb-4">Соңғы пікірлер</h2>
                 <div id="recent-comments" class="space-y-3"></div>
             </div>
@@ -129,16 +135,28 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyB3Tf0kqjLPinrVrcxzB_0Niy3RIL9FJ5Q", authDomain: "kushti-anime.firebaseapp.com", projectId: "kushti-anime", storageBucket: "kushti-anime.firebasestorage.app", messagingSenderId: "539636802828", appId: "1:539636802828:web:9d6d7877d88ac452d61529", measurementId: "G-7ZTFL5TVCS" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyB3Tf0kqjLPinrVrcxzB_0Niy3RIL9FJ5Q", 
+            authDomain: "kushti-anime.firebaseapp.com", 
+            projectId: "kushti-anime", 
+            storageBucket: "kushti-anime.firebasestorage.app", 
+            messagingSenderId: "539636802828", 
+            appId: "1:539636802828:web:9d6d7877d88ac452d61529", 
+            measurementId: "G-7ZTFL5TVCS" 
+        };
+
+        console.log('🚀 Инициализация Firebase...');
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        console.log('✅ Firebase инициализирован');
 
         // Получаем userId из URL
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('uid');
 
-        console.log('Requested userId:', userId); // Для отладки
+        console.log('📍 URL:', window.location.href);
+        console.log('📍 Requested userId:', userId);
 
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
@@ -146,11 +164,20 @@
             toast.style.background = type === 'error' ? '#dc2626' : '#ea580c';
             toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>${message}`;
             document.body.appendChild(toast);
-            setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+            setTimeout(() => { 
+                toast.classList.add('hide'); 
+                setTimeout(() => toast.remove(), 300); 
+            }, 3000);
         }
 
-        window.addEventListener('online', () => { document.getElementById('offline-banner').classList.add('hidden'); showToast('Интернет қосылды', 'success'); });
-        window.addEventListener('offline', () => { document.getElementById('offline-banner').classList.remove('hidden'); });
+        window.addEventListener('online', () => { 
+            document.getElementById('offline-banner').classList.add('hidden'); 
+            showToast('Интернет қосылды', 'success'); 
+        });
+        
+        window.addEventListener('offline', () => { 
+            document.getElementById('offline-banner').classList.remove('hidden'); 
+        });
 
         function applyTheme() {
             const theme = localStorage.getItem('theme') || 'dark';
@@ -158,24 +185,26 @@
             const nav = document.querySelector('nav');
             
             if (theme === 'dark') {
-                body.classList.add('bg-black', 'text-white');
-                body.classList.remove('bg-white', 'text-gray-900');
+                body.className = 'min-h-screen bg-black text-white transition-colors duration-300';
                 nav.classList.add('bg-zinc-900', 'border-zinc-800');
                 nav.classList.remove('bg-white', 'border-gray-200');
                 document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
                 document.querySelectorAll('.border').forEach(el => {
-                    el.classList.add('border-zinc-800');
-                    el.classList.remove('border-gray-200');
+                    if (!el.classList.contains('border-orange-500') && !el.classList.contains('border-red-500')) {
+                        el.classList.add('border-zinc-800');
+                        el.classList.remove('border-gray-200');
+                    }
                 });
             } else {
-                body.classList.add('bg-white', 'text-gray-900');
-                body.classList.remove('bg-black', 'text-white');
+                body.className = 'min-h-screen bg-white text-gray-900 transition-colors duration-300';
                 nav.classList.add('bg-white', 'border-gray-200');
                 nav.classList.remove('bg-zinc-900', 'border-zinc-800');
                 document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
                 document.querySelectorAll('.border').forEach(el => {
-                    el.classList.add('border-gray-200');
-                    el.classList.remove('border-zinc-800');
+                    if (!el.classList.contains('border-orange-500') && !el.classList.contains('border-red-500')) {
+                        el.classList.add('border-gray-200');
+                        el.classList.remove('border-zinc-800');
+                    }
                 });
             }
         }
@@ -189,95 +218,117 @@
         applyTheme();
 
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        function showError() {
+        function showError(message = 'Пайдаланушы табылмады', details = '') {
+            console.error('❌ Ошибка:', message, details);
             document.getElementById('loading').style.display = 'none';
             document.getElementById('profile-content').classList.add('hidden');
             document.getElementById('error-container').classList.remove('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-details').textContent = details;
         }
 
         async function loadUserProfile() {
-            // Проверка наличия userId
+            console.log('🔍 Начинаем загрузку профиля...');
+
+            // Проверка 1: Есть ли userId?
             if (!userId) {
-                console.error('No userId provided');
-                showToast('Пайдаланушы ID көрсетілмеген!', 'error');
-                showError();
+                console.error('❌ No userId provided in URL');
+                showError('Пайдаланушы ID көрсетілмеген!', 'URL мекенжайында ?uid=... параметрі жоқ');
                 return;
             }
 
+            console.log('✅ userId найден:', userId);
+
             try {
-                // Загружаем данные пользователя
-                const userDoc = await getDoc(doc(db, "users", userId));
+                // Проверка 2: Существует ли пользователь?
+                console.log('📥 Загружаем документ пользователя из Firestore...');
+                const userDocRef = doc(db, "users", userId);
+                const userDoc = await getDoc(userDocRef);
                 
                 if (!userDoc.exists()) {
-                    console.error('User not found:', userId);
-                    showToast('Пайдаланушы табылмады!', 'error');
-                    showError();
+                    console.error('❌ Пользователь не существует в базе данных');
+                    showError('Пайдаланушы табылмады!', `ID: ${userId} бойынша пайдаланушы базада жоқ`);
                     return;
                 }
 
                 const userData = userDoc.data();
-                console.log('User data loaded:', userData);
+                console.log('✅ Данные пользователя загружены:', userData);
 
                 // Заполняем профиль
-                document.getElementById('user-name').innerText = '@' + (userData.username || 'User');
-                document.getElementById('user-avatar').innerText = (userData.username || 'U')[0].toUpperCase();
-                document.getElementById('user-bio').innerText = userData.bio || 'Био жоқ';
+                console.log('📝 Заполняем данные профиля...');
+                document.getElementById('user-name').textContent = '@' + (userData.username || 'User');
+                document.getElementById('user-avatar').textContent = (userData.username || 'U')[0].toUpperCase();
+                document.getElementById('user-bio').textContent = userData.bio || 'Био жоқ';
 
                 // Загружаем коллекции
+                console.log('📚 Загружаем коллекции...');
                 await loadCollections(userId);
 
                 // Загружаем комментарии
+                console.log('💬 Загружаем комментарии...');
                 await loadComments(userId);
 
                 // Загружаем рейтинги
+                console.log('⭐ Загружаем рейтинги...');
                 await loadRatings(userId);
 
                 // Загружаем друзей
+                console.log('👥 Загружаем друзей...');
                 await loadFriends(userId);
 
                 // Загружаем кнопки действий
+                console.log('🔘 Загружаем кнопки действий...');
                 await loadActionButtons(userId, userData.username);
 
                 // Показываем профиль
+                console.log('✅ Профиль успешно загружен!');
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('profile-content').classList.remove('hidden');
 
                 // Проверяем роль для админ кнопки
                 if (auth.currentUser) {
                     const currentUserDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-                    if (currentUserDoc.exists() && (currentUserDoc.data().role === 'admin' || currentUserDoc.data().role === 'moderator')) {
-                        document.getElementById('admin-btn').classList.remove('hidden');
+                    if (currentUserDoc.exists()) {
+                        const role = currentUserDoc.data().role;
+                        if (role === 'admin' || role === 'moderator') {
+                            document.getElementById('admin-btn').classList.remove('hidden');
+                        }
                     }
                 }
 
             } catch (error) {
-                console.error('Error loading profile:', error);
-                showToast('Профиль жүктелу қатесі: ' + error.message, 'error');
-                showError();
+                console.error('❌ Критическая ошибка при загрузке профиля:', error);
+                console.error('Код ошибки:', error.code);
+                console.error('Сообщение:', error.message);
+                showError('Профиль жүктелу қатесі', error.message);
             }
         }
 
         async function loadCollections(uid) {
             try {
+                console.log('  📦 Загружаем коллекции для:', uid);
                 const collections = ['watching', 'favorite', 'completed', 'planned'];
                 
                 for (const type of collections) {
                     const q = query(collection(db, "collections"), where("userId", "==", uid), where("type", "==", type));
                     const snap = await getDocs(q);
-                    document.getElementById(`count-${type}`).innerText = snap.size;
+                    document.getElementById(`count-${type}`).textContent = snap.size;
+                    console.log(`  ✅ ${type}: ${snap.size}`);
                 }
             } catch (error) {
-                console.error('Error loading collections:', error);
+                console.error('  ❌ Ошибка загрузки коллекций:', error);
             }
         }
 
         async function loadComments(uid) {
             try {
+                console.log('  💬 Загружаем комментарии для:', uid);
                 const commentsQuery = query(
                     collection(db, "comments"), 
                     where("userId", "==", uid),
@@ -286,10 +337,16 @@
                 );
                 const commentsSnap = await getDocs(commentsQuery);
                 
-                document.getElementById('comments-count').innerText = commentsSnap.size;
+                console.log(`  ✅ Найдено комментариев: ${commentsSnap.size}`);
+                document.getElementById('comments-count').textContent = commentsSnap.size;
 
                 const commentsContainer = document.getElementById('recent-comments');
                 commentsContainer.innerHTML = '';
+
+                if (commentsSnap.empty) {
+                    commentsContainer.innerHTML = '<p class="text-sm opacity-50 text-center py-4">Пікірлер жоқ</p>';
+                    return;
+                }
 
                 for (const commentDoc of commentsSnap.docs) {
                     const comment = commentDoc.data();
@@ -298,7 +355,7 @@
                     const date = new Date(comment.time).toLocaleDateString('kk-KZ');
 
                     commentsContainer.innerHTML += `
-                    <div class="p-4 rounded-xl border">
+                    <div class="p-4 rounded-xl border border-zinc-800">
                         <div class="flex justify-between mb-2">
                             <span class="text-orange-500 text-xs font-bold">${escapeHtml(animeTitle)}</span>
                             <span class="opacity-40 text-[10px]">${date}</span>
@@ -306,24 +363,28 @@
                         <p class="text-sm opacity-80">${escapeHtml(comment.text)}</p>
                     </div>`;
                 }
-
-                if (commentsSnap.empty) {
-                    commentsContainer.innerHTML = '<p class="text-sm opacity-50 text-center py-4">Пікірлер жоқ</p>';
-                }
             } catch (error) {
-                console.error('Error loading comments:', error);
+                console.error('  ❌ Ошибка загрузки комментариев:', error);
             }
         }
 
         async function loadRatings(uid) {
             try {
+                console.log('  ⭐ Загружаем рейтинги для:', uid);
                 const ratingsQuery = query(collection(db, "ratings"), where("userId", "==", uid));
                 const ratingsSnap = await getDocs(ratingsQuery);
-                document.getElementById('ratings-count').innerText = ratingsSnap.size;
+                
+                console.log(`  ✅ Найдено рейтингов: ${ratingsSnap.size}`);
+                document.getElementById('ratings-count').textContent = ratingsSnap.size;
 
                 let totalStars = 0;
                 const ratingsContainer = document.getElementById('user-ratings');
                 ratingsContainer.innerHTML = '';
+
+                if (ratingsSnap.empty) {
+                    ratingsContainer.innerHTML = '<p class="text-sm opacity-50 text-center py-4 col-span-full">Бағалар жоқ</p>';
+                    return;
+                }
 
                 for (const ratingDoc of ratingsSnap.docs) {
                     const rating = ratingDoc.data();
@@ -333,8 +394,8 @@
                     if (animeDoc.exists()) {
                         const anime = animeDoc.data();
                         ratingsContainer.innerHTML += `
-                        <div class="p-3 rounded-xl border text-center">
-                            <img src="${anime.poster || '/placeholder.jpg'}" class="w-full h-32 object-cover rounded-lg mb-2" alt="${escapeHtml(anime.title)}">
+                        <div class="p-3 rounded-xl border border-zinc-800 text-center">
+                            <img src="${anime.poster || '/placeholder.jpg'}" class="w-full h-32 object-cover rounded-lg mb-2" alt="${escapeHtml(anime.title)}" onerror="this.src='/placeholder.jpg'">
                             <p class="text-xs font-bold truncate">${escapeHtml(anime.title)}</p>
                             <div class="text-orange-500 font-bold mt-1">${rating.stars}/10</div>
                         </div>`;
@@ -342,23 +403,22 @@
                 }
 
                 const avgRating = ratingsSnap.size > 0 ? (totalStars / ratingsSnap.size).toFixed(1) : '0.0';
-                document.getElementById('avg-rating').innerText = avgRating;
-
-                if (ratingsSnap.empty) {
-                    ratingsContainer.innerHTML = '<p class="text-sm opacity-50 text-center py-4 col-span-full">Бағалар жоқ</p>';
-                }
+                document.getElementById('avg-rating').textContent = avgRating;
+                console.log(`  ✅ Средний рейтинг: ${avgRating}`);
             } catch (error) {
-                console.error('Error loading ratings:', error);
+                console.error('  ❌ Ошибка загрузки рейтингов:', error);
             }
         }
 
         async function loadFriends(uid) {
             try {
+                console.log('  👥 Загружаем друзей для:', uid);
                 const friendsQuery = query(collection(db, "friends"), where("userId", "==", uid));
                 const friendsSnap = await getDocs(friendsQuery);
-                document.getElementById('friends-count').innerText = friendsSnap.size;
+                console.log(`  ✅ Найдено друзей: ${friendsSnap.size}`);
+                document.getElementById('friends-count').textContent = friendsSnap.size;
             } catch (error) {
-                console.error('Error loading friends:', error);
+                console.error('  ❌ Ошибка загрузки друзей:', error);
             }
         }
 
@@ -420,7 +480,7 @@
 
                 return 'none';
             } catch (error) {
-                console.error('Error checking friendship:', error);
+                console.error('  ❌ Ошибка проверки дружбы:', error);
                 return 'none';
             }
         }
@@ -432,7 +492,6 @@
             }
             
             try {
-                // Проверка на существующий запрос
                 const existingQuery = query(collection(db, "friend_requests"), 
                     where("from", "==", auth.currentUser.uid),
                     where("to", "==", toId));
@@ -471,21 +530,27 @@
             try {
                 const q1 = query(collection(db, "friends"), where("userId", "==", auth.currentUser.uid), where("friendId", "==", friendId));
                 const snap1 = await getDocs(q1);
-                snap1.forEach(async d => await deleteDoc(d.ref));
+                for (const docSnapshot of snap1.docs) {
+                    await deleteDoc(docSnapshot.ref);
+                }
 
                 const q2 = query(collection(db, "friends"), where("userId", "==", friendId), where("friendId", "==", auth.currentUser.uid));
                 const snap2 = await getDocs(q2);
-                snap2.forEach(async d => await deleteDoc(d.ref));
+                for (const docSnapshot of snap2.docs) {
+                    await deleteDoc(docSnapshot.ref);
+                }
 
                 showToast('Дос өшірілді', 'success');
-                location.reload();
+                setTimeout(() => location.reload(), 1000);
             } catch(e) {
-                console.error(e);
+                console.error('Remove friend error:', e);
                 showToast('Қате болды!', 'error');
             }
         };
 
+        // Запуск загрузки профиля при изменении состояния авторизации
         onAuthStateChanged(auth, async (user) => {
+            console.log('🔐 Auth state changed:', user ? 'Авторизован' : 'Не авторизован');
             await loadUserProfile();
         });
     </script>
