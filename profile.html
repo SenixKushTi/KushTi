@@ -51,7 +51,7 @@
         <div class="flex justify-between mb-10">
             <button onclick="location.href='index.html'" class="text-orange-500 font-bold">← БАСТЫ БЕТ</button>
             <button id="admin-btn" onclick="location.href='admin.html'" class="hidden text-orange-500" title="Админ панель"><i class="fas fa-shield-alt"></i></button>
-            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon text-white"></i></button>
         </div>
 
         <!-- ИСПРАВЛЕНО: Коллекции с правильной работой -->
@@ -171,6 +171,7 @@
             const body = document.body;
             const cards = document.querySelectorAll('.border');
             const inputs = document.querySelectorAll('input, textarea');
+            const icon = document.getElementById('theme-icon');
             
             if (theme === 'dark') {
                 body.classList.add('bg-[#0b0f1a]', 'text-white');
@@ -183,7 +184,9 @@
                     i.classList.add('bg-[#0b0f1a]', 'border-slate-800', 'text-white');
                     i.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-900');
                 });
-                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+                icon.classList.replace('fa-sun', 'fa-moon');
+                icon.classList.add('text-white');
+                icon.classList.remove('text-gray-900');
             } else {
                 body.classList.add('bg-gray-50', 'text-gray-900');
                 body.classList.remove('bg-[#0b0f1a]', 'text-white');
@@ -195,7 +198,9 @@
                     i.classList.add('bg-gray-100', 'border-gray-300', 'text-gray-900');
                     i.classList.remove('bg-[#0b0f1a]', 'border-slate-800', 'text-white');
                 });
-                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+                icon.classList.replace('fa-moon', 'fa-sun');
+                icon.classList.remove('text-white');
+                icon.classList.add('text-gray-900');
             }
         }
 
