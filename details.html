@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детальдар — Kushti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .toast {
+            position: fixed; top: 20px; right: 20px; background: #ea580c; color: white;
+            padding: 16px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9999; animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.hide { animation: slideOut 0.3s ease forwards; }
+        @keyframes slideOut { to { transform: translateX(400px); opacity: 0; } }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #ea580c; border-radius: 50%;
+            width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .like-btn, .dislike-btn { transition: all 0.3s ease; }
+        .like-btn:hover { transform: scale(1.1); color: #22c55e; }
+        .dislike-btn:hover { transform: scale(1.1); color: #ef4444; }
+        .like-btn.active { color: #22c55e; font-weight: bold; }
+        .dislike-btn.active { color: #ef4444; font-weight: bold; }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+    <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm z-50">
+        <i class="fas fa-wifi-slash mr-2"></i>Интернет байланысы жоқ
+    </div>
+
+    <nav class="p-4 border-b flex justify-between">
+        <button onclick="history.back()" class="text-white font-bold">← АРТҚА</button>
+        <span class="font-black italic text-white">Kushti</span>
+        <div class="flex gap-3 items-center">
+            <button id="admin-btn" onclick="location.href='admin.html'" class="hidden text-orange-500" title="Админ панель"><i class="fas fa-shield-alt"></i></button>
+            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-4 flex flex-col gap-6">
+        <div id="loading" class="loader"></div>
+        
+        <div id="anime-content" class="hidden">
+            <!-- ИСПРАВЛЕНО: Видео только для зарегистрированных -->
+            <div id="video-section" class="hidden mb-6">
+                <div class="rounded-3xl overflow-hidden border mb-4">
+                    <div class="relative w-full" style="padding-top: 56.25%;">
+                        <iframe id="video-iframe" class="absolute top-0 left-0 w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                    </div>
+                </div>
+
+                <!-- ИСПРАВЛЕНО: Лайки обновляются -->
+                <div class="p-4 rounded-2xl border mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-6">
+                            <button onclick="toggleVideoLike()" class="like-btn flex items-center gap-2 text-lg">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span id="video-likes-count">0</span>
+                            </button>
+                            <button onclick="toggleVideoDislike()" class="dislike-btn flex items-center gap-2 text-lg">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span id="video-dislikes-count">0</span>
+                            </button>
+                        </div>
+                        <div class="text-sm opacity-60">
+                            <span id="current-episode-title">Бөлім 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ИСПРАВЛЕНО: Комментарии видны -->
+                <div class="p-4 rounded-2xl border mb-4">
+                    <h3 class="font-bold text-orange-500 mb-4 uppercase text-sm flex items-center gap-2">
+                        <i class="fas fa-comments"></i>
+                        Бөлімге пікірлер
+                    </h3>
+                    
+                    <div class="mb-4">
+                        <textarea id="video-comment-input" class="w-full outline-none text-sm p-3 border rounded-xl h-20" placeholder="Бұл бөлім туралы пікіріңізді жазыңыз..."></textarea>
+                        <button onclick="postVideoComment()" class="w-full bg-orange-600 py-3 rounded-xl font-bold mt-2 text-xs text-white hover:bg-orange-700 transition">
+                            <i class="fas fa-paper-plane mr-2"></i>ЖІБЕРУ
+                        </button>
+                    </div>
+                    
+                    <div id="video-comments-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                </div>
+                
+                <div class="p-4 rounded-2xl border">
+                    <h3 class="font-bold text-orange-500 mb-3 uppercase text-sm">Бөлімдер</h3>
+                    <div id="episodes-list" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-64 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <div class="p-6 rounded-[30px] border flex flex-col md:flex-row gap-6">
+                <img id="a-poster" class="w-full md:w-64 rounded-2xl shadow-2xl aspect-[2/3] object-cover">
+                <div class="flex-1">
+                    <h1 id="a-title" class="text-2xl font-black mb-2 uppercase">...</h1>
+                    <p id="avg-rating" class="text-orange-500 font-bold mb-4">⭐ 0.0</p>
+                    
+                    <!-- ИСПРАВЛЕНО: Кнопка показывается только авторизованным -->
+                    <button id="watch-btn" onclick="checkAuthAndWatch()" class="hidden mb-4 bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl transition-all transform hover:scale-105">
+                        <i class="fas fa-play mr-2"></i>КӨРУ
+                    </button>
+                    
+                    <!-- ДОБАВЛЕНО: Надпись для незарегистрированных -->
+                    <div id="auth-required-msg" class="hidden mb-4 p-4 rounded-xl border-2 border-orange-500 bg-orange-500/10">
+                        <p class="text-orange-500 font-bold text-center flex items-center justify-center gap-2">
+                            <i class="fas fa-lock"></i>
+                            <span>Видео көру үшін тіркелу керек!</span>
+                        </p>
+                        <button onclick="location.href='index.html'" class="w-full mt-3 bg-orange-600 py-2 rounded-lg font-bold text-white hover:bg-orange-700 transition">
+                            <i class="fas fa-user-plus mr-2"></i>ТІРКЕЛУ
+                        </button>
+                    </div>
+                    
+                    <button id="admin-add-video-btn" onclick="location.href='edit-anime.html?id=' + new URLSearchParams(window.location.search).get('id')" class="hidden mb-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl transition-all">
+                        <i class="fas fa-plus mr-2"></i>ВИДЕО ҚОСУ (Админ)
+                    </button>
+                    
+                    <div class="flex gap-2 text-2xl text-slate-700 mb-4" id="stars">
+                        <i class="fas fa-star cursor-pointer hover:text-orange-500 transition" onclick="rate(1)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-orange-500 transition" onclick="rate(2)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-orange-500 transition" onclick="rate(3)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-orange-500 transition" onclick="rate(4)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-orange-500 transition" onclick="rate(5)"></i>
+                    </div>
+                    <p id="my-rating" class="text-xs opacity-60 mb-4"></p>
+                    
+                    <a href="https://t.me/kushtimyn" target="_blank" class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-xl mb-4 hover:bg-blue-600 transition text-sm font-bold">
+                        <i class="fab fa-telegram"></i>
+                        Біздің Telegram арнамызда көріңіз
+                    </a>
+                    
+                    <div class="flex gap-2 mb-4 flex-wrap">
+                        <button onclick="addToCollection('watching')" class="text-xs px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                            <i class="fas fa-play-circle mr-1"></i> Қарап жатырмын
+                        </button>
+                        <button onclick="addToCollection('favorite')" class="text-xs px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+                            <i class="fas fa-heart mr-1"></i> Сүйіктілер
+                        </button>
+                        <button onclick="addToCollection('completed')" class="text-xs px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">
+                            <i class="fas fa-check-circle mr-1"></i> Көрдім
+                        </button>
+                        <button onclick="addToCollection('planned')" class="text-xs px-3 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700">
+                            <i class="fas fa-clock mr-1"></i> Жоспарда
+                        </button>
+                    </div>
+                    
+                    <p id="a-desc" class="text-sm opacity-80 leading-relaxed"></p>
+                </div>
+            </div>
+
+            <!-- ИСПРАВЛЕНО: Комментарии видны -->
+            <div class="p-6 rounded-3xl border">
+                <h2 class="text-xl font-bold text-orange-500 mb-4 uppercase flex items-center gap-2">
+                    <i class="fas fa-comments"></i>
+                    Аниме туралы пікірлер
+                </h2>
+                
+                <div class="mb-6">
+                    <textarea id="c-input" class="w-full outline-none p-4 border rounded-2xl h-24 text-sm" placeholder="Сіздің пікіріңіз..."></textarea>
+                    <button onclick="postC()" class="w-full bg-orange-600 py-4 rounded-2xl font-bold mt-3 text-sm text-white hover:bg-orange-700 transition">
+                        <i class="fas fa-paper-plane mr-2"></i>ЖІБЕРУ
+                    </button>
+                </div>
+                
+                <div id="c-list" class="space-y-4"></div>
+                <button id="load-more-comments" onclick="loadMoreComments()" class="hidden w-full mt-4 bg-zinc-800 py-3 rounded-xl text-sm hover:bg-zinc-700">
+                    Көбірек көрсету
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, addDoc, setDoc, deleteDoc, updateDoc, increment, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyB3Tf0kqjLPinrVrcxzB_0Niy3RIL9FJ5Q", authDomain: "kushti-anime.firebaseapp.com", projectId: "kushti-anime", storageBucket: "kushti-anime.firebasestorage.app", messagingSenderId: "539636802828", appId: "1:539636802828:web:9d6d7877d88ac452d61529", measurementId: "G-7ZTFL5TVCS" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const animeId = new URLSearchParams(window.location.search).get('id');
+        let currentUserRating = 0;
+        let currentUserRole = 'user';
+        let currentEpisode = 0;
+        let userVideoReaction = null;
+        const COMMENTS_PER_PAGE = 10;
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        window.addEventListener('online', () => { document.getElementById('offline-banner').classList.add('hidden'); showToast('Интернет қосылды', 'success'); });
+        window.addEventListener('offline', () => { document.getElementById('offline-banner').classList.remove('hidden'); });
+
+        function applyTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            const body = document.body;
+            const nav = document.querySelector('nav');
+            const textarea = document.querySelectorAll('textarea');
+            
+            if (theme === 'dark') {
+                body.classList.add('bg-black', 'text-white');
+                body.classList.remove('bg-white', 'text-gray-900');
+                nav.classList.add('bg-zinc-900', 'border-zinc-800');
+                nav.classList.remove('bg-white', 'border-gray-200');
+                textarea.forEach(t => {
+                    t.classList.add('bg-zinc-800', 'text-white', 'border-zinc-700');
+                    t.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
+                });
+                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+            } else {
+                body.classList.add('bg-white', 'text-gray-900');
+                body.classList.remove('bg-black', 'text-white');
+                nav.classList.add('bg-white', 'border-gray-200');
+                nav.classList.remove('bg-zinc-900', 'border-zinc-800');
+                textarea.forEach(t => {
+                    t.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
+                    t.classList.remove('bg-zinc-800', 'text-white', 'border-zinc-700');
+                });
+                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+            }
+        }
+
+        window.toggleTheme = () => {
+            const current = localStorage.getItem('theme') || 'dark';
+            localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
+            applyTheme();
+        };
+
+        applyTheme();
+
+        async function loadUserRole() {
+            if (auth.currentUser) {
+                const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+                if (userDoc.exists()) {
+                    currentUserRole = userDoc.data().role || 'user';
+                    if (currentUserRole === 'admin' || currentUserRole === 'moderator') {
+                        document.getElementById('admin-add-video-btn').classList.remove('hidden');
+                        document.getElementById('admin-btn').classList.remove('hidden');
+                    }
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function load() {
+            try {
+                const a = await getDoc(doc(db, "content", animeId));
+                if (!a.exists()) {
+                    document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Аниме табылмады</p>';
+                    return;
+                }
+
+                const data = a.data();
+                document.getElementById('a-poster').src = data.poster_url;
+                document.getElementById('a-title').innerText = data.title_kz || 'Атауы жоқ';
+                document.getElementById('a-desc').innerText = data.description_kz || 'Сипаттама жоқ';
+
+                const hasVideo = (data.video_url && data.video_url.trim()) || (data.episodes && data.episodes.length > 0);
+                
+                // ИСПРАВЛЕНО: Показываем кнопку или надпись в зависимости от авторизации
+                if (hasVideo) {
+                    if (auth.currentUser) {
+                        document.getElementById('watch-btn').classList.remove('hidden');
+                    } else {
+                        document.getElementById('auth-required-msg').classList.remove('hidden');
+                    }
+                }
+
+                if (data.episodes && data.episodes.length > 0) {
+                    const episodesList = document.getElementById('episodes-list');
+                    episodesList.innerHTML = '';
+                    const theme = localStorage.getItem('theme') || 'dark';
+                    const epBg = theme === 'dark' ? 'bg-zinc-800 hover:bg-orange-600' : 'bg-gray-200 hover:bg-orange-600';
+                    data.episodes.forEach((ep, i) => {
+                        episodesList.innerHTML += `<button onclick="playEpisode(${i}, ${JSON.stringify(data.episodes).replace(/"/g, '&quot;')})" class="${epBg} px-3 py-2 rounded-lg font-bold text-sm transition">${i + 1}</button>`;
+                    });
+                }
+
+                const ratingsQuery = query(collection(db, "ratings"), where("animeId", "==", animeId));
+                onSnapshot(ratingsQuery, s => {
+                    let total = 0;
+                    s.forEach(d => total += d.data().stars);
+                    const avg = s.size > 0 ? (total / s.size).toFixed(1) : '0.0';
+                    document.getElementById('avg-rating').innerText = `⭐ ${avg}`;
+                });
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('anime-content').classList.remove('hidden');
+            } catch(e) {
+                console.error('Load error:', e);
+                document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Жүктеу қатесі!</p>';
+            }
+        }
+
+        function updateStars(rating) {
+            const stars = document.querySelectorAll('#stars i');
+            stars.forEach((star, i) => {
+                if (i < rating) {
+                    star.classList.remove('text-slate-700');
+                    star.classList.add('text-orange-500');
+                } else {
+                    star.classList.add('text-slate-700');
+                    star.classList.remove('text-orange-500');
+                }
+            });
+        }
+
+        window.rate = async (stars) => {
+            if(!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+            
+            try {
+                await setDoc(doc(db, "ratings", auth.currentUser.uid + "_" + animeId), { userId: auth.currentUser.uid, animeId, stars, timestamp: Date.now() });
+                currentUserRating = stars;
+                updateStars(stars);
+                document.getElementById('my-rating').innerText = `Сіздің бағаңыз: ${stars} ⭐`;
+                showToast('Баға қойылды!', 'success');
+            } catch(e) {
+                console.error('Rating error:', e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        window.addToCollection = async (type) => {
+            if(!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+            
+            try {
+                const collectionId = auth.currentUser.uid + "_" + animeId + "_" + type;
+                await setDoc(doc(db, "collections", collectionId), { userId: auth.currentUser.uid, animeId: animeId, type: type, timestamp: Date.now() });
+                const typeNames = { watching: 'Қарап жатырмын', favorite: 'Сүйіктілер', completed: 'Көрдім', planned: 'Жоспарда' };
+                showToast(`"${typeNames[type]}" қосылды!`, 'success');
+            } catch(e) {
+                console.error('Collection error:', e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        // ИСПРАВЛЕНО: Проверка авторизации перед показом видео
+        window.checkAuthAndWatch = async () => {
+            if (!auth.currentUser) {
+                showToast('⚠️ Видео көру үшін тіркелу керек!', 'error');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+            toggleVideo();
+        };
+
+        window.toggleVideo = async () => {
+            const videoSection = document.getElementById('video-section');
+            const anime = await getDoc(doc(db, "content", animeId));
+            const animeData = anime.data();
+
+            const hasVideo = (animeData.video_url && animeData.video_url.trim()) || (animeData.episodes && animeData.episodes.length > 0);
+            
+            if (!hasVideo) {
+                showToast('Бұл анимеде әзірше видео жоқ! 😔', 'error');
+                return;
+            }
+
+            if (videoSection.classList.contains('hidden')) {
+                if (animeData.episodes && animeData.episodes.length > 0) {
+                    playEpisode(0, animeData.episodes);
+                } else if (animeData.video_url) {
+                    currentEpisode = 0;
+                    const iframe = document.getElementById('video-iframe');
+                    const videoUrl = animeData.video_url;
+                    
+                    if (videoUrl.includes('drive.google.com')) {
+                        const fileId = videoUrl.match(/\/d\/(.+?)\//)?.[1] || videoUrl.split('/').pop();
+                        iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                    } else if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                        const videoId = videoUrl.includes('youtu.be') ? videoUrl.split('/').pop() : new URL(videoUrl).searchParams.get('v');
+                        iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                    } else {
+                        iframe.src = videoUrl;
+                    }
+
+                    videoSection.classList.remove('hidden');
+                    loadVideoReactions();
+                    loadVideoComments();
+                }
+            } else {
+                videoSection.classList.add('hidden');
+            }
+        };
+
+        window.playEpisode = (index, episodes) => {
+            currentEpisode = index;
+            const iframe = document.getElementById('video-iframe');
+            const videoUrl = episodes[index].video_url;
+            
+            if (videoUrl.includes('drive.google.com')) {
+                const fileId = videoUrl.match(/\/d\/(.+?)\//)?.[1] || videoUrl.split('/').pop();
+                iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+            } else if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                const videoId = videoUrl.includes('youtu.be') ? videoUrl.split('/').pop() : new URL(videoUrl).searchParams.get('v');
+                iframe.src = `https://www.youtube.com/embed/${videoId}`;
+            } else {
+                iframe.src = videoUrl;
+            }
+
+            document.getElementById('current-episode-title').innerText = `Бөлім ${index + 1}`;
+            document.getElementById('video-section').classList.remove('hidden');
+            
+            loadVideoReactions();
+            loadVideoComments();
+        }
+
+        // ИСПРАВЛЕНО: Лайки обновляются в реальном времени
+        async function loadVideoReactions() {
+            const reactionId = `${animeId}_ep${currentEpisode}`;
+            
+            try {
+                onSnapshot(doc(db, "video_reactions", reactionId), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        document.getElementById('video-likes-count').innerText = data.likes || 0;
+                        document.getElementById('video-dislikes-count').innerText = data.dislikes || 0;
+                    } else {
+                        document.getElementById('video-likes-count').innerText = 0;
+                        document.getElementById('video-dislikes-count').innerText = 0;
+                    }
+                }, (error) => {
+                    console.log('Reactions not yet created:', error);
+                    document.getElementById('video-likes-count').innerText = 0;
+                    document.getElementById('video-dislikes-count').innerText = 0;
+                });
+
+                if (auth.currentUser) {
+                    try {
+                        const userReactionId = `${auth.currentUser.uid}_${reactionId}`;
+                        const userReactionDoc = await getDoc(doc(db, "user_video_reactions", userReactionId));
+                        
+                        if (userReactionDoc.exists()) {
+                            userVideoReaction = userReactionDoc.data().type;
+                        } else {
+                            userVideoReaction = null;
+                        }
+                    } catch(e) {
+                        console.log('User reaction not found:', e);
+                        userVideoReaction = null;
+                    }
+                    updateReactionButtons();
+                }
+            } catch(e) {
+                console.error('Error loading reactions:', e);
+                document.getElementById('video-likes-count').innerText = 0;
+                document.getElementById('video-dislikes-count').innerText = 0;
+            }
+        }
+
+        function updateReactionButtons() {
+            const likeBtn = document.querySelector('.like-btn');
+            const dislikeBtn = document.querySelector('.dislike-btn');
+            
+            likeBtn.classList.toggle('active', userVideoReaction === 'like');
+            dislikeBtn.classList.toggle('active', userVideoReaction === 'dislike');
+        }
+
+        window.toggleVideoLike = async () => {
+            if (!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+
+            const reactionId = `${animeId}_ep${currentEpisode}`;
+            const userReactionId = `${auth.currentUser.uid}_${reactionId}`;
+
+            try {
+                const reactionRef = doc(db, "video_reactions", reactionId);
+                const userReactionRef = doc(db, "user_video_reactions", userReactionId);
+
+                if (userVideoReaction === 'like') {
+                    try {
+                        const docSnap = await getDoc(reactionRef);
+                        if (docSnap.exists()) {
+                            await updateDoc(reactionRef, { likes: increment(-1) });
+                        }
+                        await deleteDoc(userReactionRef);
+                    } catch(e) {
+                        console.log('Error removing like:', e);
+                    }
+                    userVideoReaction = null;
+                } else {
+                    const docSnap = await getDoc(reactionRef);
+                    
+                    if (userVideoReaction === 'dislike') {
+                        if (docSnap.exists()) {
+                            await updateDoc(reactionRef, { dislikes: increment(-1), likes: increment(1) });
+                        } else {
+                            await setDoc(reactionRef, { likes: 1, dislikes: 0 });
+                        }
+                    } else {
+                        if (!docSnap.exists()) {
+                            await setDoc(reactionRef, { likes: 1, dislikes: 0 });
+                        } else {
+                            await updateDoc(reactionRef, { likes: increment(1) });
+                        }
+                    }
+                    
+                    await setDoc(userReactionRef, { type: 'like', timestamp: Date.now() });
+                    userVideoReaction = 'like';
+                }
+                
+                updateReactionButtons();
+            } catch(e) {
+                console.error('Like error:', e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        window.toggleVideoDislike = async () => {
+            if (!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+
+            const reactionId = `${animeId}_ep${currentEpisode}`;
+            const userReactionId = `${auth.currentUser.uid}_${reactionId}`;
+
+            try {
+                const reactionRef = doc(db, "video_reactions", reactionId);
+                const userReactionRef = doc(db, "user_video_reactions", userReactionId);
+
+                if (userVideoReaction === 'dislike') {
+                    try {
+                        const docSnap = await getDoc(reactionRef);
+                        if (docSnap.exists()) {
+                            await updateDoc(reactionRef, { dislikes: increment(-1) });
+                        }
+                        await deleteDoc(userReactionRef);
+                    } catch(e) {
+                        console.log('Error removing dislike:', e);
+                    }
+                    userVideoReaction = null;
+                } else {
+                    const docSnap = await getDoc(reactionRef);
+                    
+                    if (userVideoReaction === 'like') {
+                        if (docSnap.exists()) {
+                            await updateDoc(reactionRef, { likes: increment(-1), dislikes: increment(1) });
+                        } else {
+                            await setDoc(reactionRef, { likes: 0, dislikes: 1 });
+                        }
+                    } else {
+                        if (!docSnap.exists()) {
+                            await setDoc(reactionRef, { likes: 0, dislikes: 1 });
+                        } else {
+                            await updateDoc(reactionRef, { dislikes: increment(1) });
+                        }
+                    }
+                    
+                    await setDoc(userReactionRef, { type: 'dislike', timestamp: Date.now() });
+                    userVideoReaction = 'dislike';
+                }
+                
+                updateReactionButtons();
+            } catch(e) {
+                console.error('Dislike error:', e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        // ИСПРАВЛЕНО: Комментарии видны
+        function loadVideoComments() {
+            const commentId = `${animeId}_ep${currentEpisode}`;
+            const q = query(collection(db, "video_comments"), where("episodeId", "==", commentId), orderBy("time", "desc"));
+
+            onSnapshot(q, (s) => {
+                const list = document.getElementById('video-comments-list');
+                list.innerHTML = '';
+
+                if (s.empty) {
+                    list.innerHTML = '<p class="text-center opacity-60 py-4 text-sm">Әзірше пікірлер жоқ. Бірінші бол!</p>';
+                    return;
+                }
+
+                const theme = localStorage.getItem('theme') || 'dark';
+                const cardBg = theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200';
+
+                s.forEach(d => {
+                    const c = d.data();
+                    const date = new Date(c.time).toLocaleDateString('kk-KZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    const isOwner = auth.currentUser && c.userId === auth.currentUser.uid;
+                    const canDelete = isOwner || currentUserRole === 'admin' || currentUserRole === 'moderator';
+                    
+                    list.innerHTML += `<div class="${cardBg} p-3 rounded-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-orange-500 font-bold text-xs">@${escapeHtml(c.username)}</p>
+                            <div class="flex gap-2 items-center">
+                                <p class="text-[10px] opacity-40">${date}</p>
+                                ${canDelete ? `<button onclick="deleteVideoComment('${d.id}')" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                            </div>
+                        </div>
+                        <p class="text-sm">${escapeHtml(c.text)}</p>
+                    </div>`;
+                });
+            });
+        }
+
+        window.postVideoComment = async () => {
+            const t = document.getElementById('video-comment-input').value.trim();
+            if(!t) {
+                showToast('Пікір бос болмауы керек!', 'error');
+                return;
+            }
+            if(!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+            
+            try {
+                const u = await getDoc(doc(db, "users", auth.currentUser.uid));
+                const username = u.exists() ? u.data().username : 'User';
+                const commentId = `${animeId}_ep${currentEpisode}`;
+                
+                await addDoc(collection(db, "video_comments"), { episodeId: commentId, username, text: t, userId: auth.currentUser.uid, time: Date.now() });
+                document.getElementById('video-comment-input').value = '';
+                showToast('Пікір жіберілді!', 'success');
+            } catch(e) {
+                console.error('Comment error:', e);
+                showToast('Пікір жіберу қатесі!', 'error');
+            }
+        };
+
+        window.deleteVideoComment = async (commentId) => {
+            if (!confirm('Пікірді өшіруге сенімдісіз бе?')) return;
+            try {
+                await deleteDoc(doc(db, "video_comments", commentId));
+                showToast('Пікір өшірілді', 'success');
+            } catch(e) {
+                console.error('Delete error:', e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        window.postC = async () => {
+            const t = document.getElementById('c-input').value.trim();
+            if(!t) {
+                showToast('Пікір бос болмауы керек!', 'error');
+                return;
+            }
+            if(!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+            
+            try {
+                const u = await getDoc(doc(db, "users", auth.currentUser.uid));
+                const username = u.exists() ? u.data().username : 'User';
+                
+                await addDoc(collection(db, "comments"), { animeId, username, text: t, userId: auth.currentUser.uid, time: Date.now() });
+                document.getElementById('c-input').value = '';
+                showToast('Пікір жіберілді!', 'success');
+            } catch(e) {
+                console.error('Comment error:', e);
+                showToast('Пікір жіберу қатесі!', 'error');
+            }
+        };
+
+        window.deleteComment = async (commentId) => {
+            if (!confirm('Пікірді өшіруге сенімдісіз бе?')) return;
+            try {
+                await deleteDoc(doc(db, "comments", commentId));
+                showToast('Пікір өшірілді', 'success');
+            } catch(e) {
+                console.error('Delete error:', e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        let allComments = [];
+        let displayedComments = 0;
+
+        const commentsQuery = query(collection(db, "comments"), where("animeId", "==", animeId), orderBy("time", "desc"));
+        
+        onSnapshot(commentsQuery, s => {
+            allComments = [];
+            s.forEach(d => {
+                allComments.push({ id: d.id, data: d.data() });
+            });
+            
+            displayedComments = 0;
+            document.getElementById('c-list').innerHTML = '';
+            loadMoreComments();
+        });
+
+        window.loadMoreComments = () => {
+            const l = document.getElementById('c-list');
+            const theme = localStorage.getItem('theme') || 'dark';
+            const cardBg = theme === 'dark' ? 'bg-zinc-900' : 'bg-white';
+            const cardBorder = theme === 'dark' ? 'border-zinc-800' : 'border-gray-300';
+            
+            const commentsToShow = allComments.slice(displayedComments, displayedComments + COMMENTS_PER_PAGE);
+            
+            if (commentsToShow.length === 0 && displayedComments === 0) {
+                l.innerHTML = '<p class="text-center opacity-60 py-8">Әзірше пікірлер жоқ. Бірінші бол!</p>';
+                return;
+            }
+            
+            commentsToShow.forEach(({ id, data: c }) => {
+                const safeUsername = escapeHtml(c.username || 'User');
+                const safeText = escapeHtml(c.text || '');
+                const date = new Date(c.time).toLocaleDateString('kk-KZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                
+                const isOwner = auth.currentUser && c.userId === auth.currentUser.uid;
+                const canDelete = isOwner || currentUserRole === 'admin' || currentUserRole === 'moderator';
+                
+                l.innerHTML += `<div class="${cardBg} p-4 rounded-2xl border ${cardBorder}">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-orange-500 font-bold text-xs cursor-pointer" onclick="location.href='user.html?uid=${c.userId}'">@${safeUsername}</p>
+                        <div class="flex gap-2 items-center">
+                            <p class="text-[10px] opacity-40">${date}</p>
+                            ${canDelete ? `<button onclick="deleteComment('${id}')" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                    <p class="text-sm leading-relaxed">${safeText}</p>
+                </div>`;
+            });
+            
+            displayedComments += commentsToShow.length;
+            
+            const loadMoreBtn = document.getElementById('load-more-comments');
+            if (displayedComments < allComments.length) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await loadUserRole();
+                
+                try {
+                    const ratingDoc = await getDoc(doc(db, "ratings", user.uid + "_" + animeId));
+                    if (ratingDoc.exists()) {
+                        currentUserRating = ratingDoc.data().stars;
+                        updateStars(currentUserRating);
+                        document.getElementById('my-rating').innerText = `Сіздің бағаңыз: ${currentUserRating} ⭐`;
+                    }
+                } catch(e) {
+                    console.error('Rating load error:', e);
+                }
+                
+                // ИСПРАВЛЕНО: Показываем кнопку просмотра после загрузки
+                const anime = await getDoc(doc(db, "content", animeId));
+                if (anime.exists()) {
+                    const data = anime.data();
+                    const hasVideo = (data.video_url && data.video_url.trim()) || (data.episodes && data.episodes.length > 0);
+                    if (hasVideo) {
+                        document.getElementById('watch-btn').classList.remove('hidden');
+                        document.getElementById('auth-required-msg').classList.add('hidden');
+                    }
+                }
+            } else {
+                // Если не залогинен - показываем надпись
+                const anime = await getDoc(doc(db, "content", animeId));
+                if (anime.exists()) {
+                    const data = anime.data();
+                    const hasVideo = (data.video_url && data.video_url.trim()) || (data.episodes && data.episodes.length > 0);
+                    if (hasVideo) {
+                        document.getElementById('watch-btn').classList.add('hidden');
+                        document.getElementById('auth-required-msg').classList.remove('hidden');
+                    }
+                }
+            }
+        });
+
+        load();
+    </script>
+</body>
+</html>

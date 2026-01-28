@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль – Kushti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .toast { position: fixed; top: 20px; right: 20px; background: #ea580c; color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.hide { animation: slideOut 0.3s ease forwards; }
+        @keyframes slideOut { to { transform: translateX(400px); opacity: 0; } }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #ea580c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen transition-colors duration-300">
+    <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm z-50">
+        <i class="fas fa-wifi-slash mr-2"></i>Интернет байланысы жоқ
+    </div>
+
+    <nav class="p-4 border-b flex justify-between items-center sticky top-0 z-50 backdrop-blur-lg">
+        <button onclick="history.back()" class="text-orange-500 font-bold">← АРТҚА</button>
+        <span class="font-black italic text-orange-500">Kushti</span>
+        <div class="flex gap-3 items-center">
+            <button id="admin-btn" onclick="location.href='admin.html'" class="hidden text-orange-500" title="Админ панель"><i class="fas fa-shield-alt"></i></button>
+            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6">
+        <div id="loading" class="loader"></div>
+        
+        <div id="profile-content" class="hidden">
+            <div class="rounded-[40px] p-8 border mb-6">
+                <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                    <div id="user-avatar-container" class="w-32 h-32 bg-gradient-to-br from-orange-600 to-orange-800 rounded-full flex items-center justify-center text-5xl font-black text-white">
+                        <span id="user-avatar"></span>
+                    </div>
+                    
+                    <div class="flex-1 text-center md:text-left">
+                        <h1 id="user-name" class="text-3xl font-black text-orange-500 mb-2">@username</h1>
+                        <div class="flex gap-4 justify-center md:justify-start mb-4 text-sm opacity-70">
+                            <div>
+                                <span id="friends-count" class="font-bold text-orange-500">0</span>
+                                <span class="ml-1">достар</span>
+                            </div>
+                            <div id="online-status" class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                <span>Офлайн</span>
+                            </div>
+                        </div>
+                        <p id="user-bio" class="opacity-70 mb-6 max-w-md">Био жоқ</p>
+                        
+                        <div id="action-buttons" class="flex flex-wrap gap-3 justify-center md:justify-start">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="p-6 rounded-2xl border text-center">
+                    <div class="text-3xl font-black text-orange-500 mb-2" id="comments-count">0</div>
+                    <div class="text-sm opacity-70">Пікірлер</div>
+                </div>
+                <div class="p-6 rounded-2xl border text-center">
+                    <div class="text-3xl font-black text-orange-500 mb-2" id="ratings-count">0</div>
+                    <div class="text-sm opacity-70">Бағалар</div>
+                </div>
+                <div class="p-6 rounded-2xl border text-center">
+                    <div class="text-3xl font-black text-orange-500 mb-2" id="avg-rating">0.0</div>
+                    <div class="text-sm opacity-70">Орташа баға</div>
+                </div>
+            </div>
+
+            <div class="mb-6 p-6 rounded-3xl border">
+                <h2 class="text-xl font-bold text-orange-500 mb-4">Коллекциялар</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div class="p-4 rounded-xl border text-center">
+                        <i class="fas fa-play-circle text-2xl text-orange-500 mb-2"></i>
+                        <p class="text-xs font-bold">Қарап жатыр</p>
+                        <p id="count-watching" class="text-xl font-black text-orange-500">0</p>
+                    </div>
+                    <div class="p-4 rounded-xl border text-center">
+                        <i class="fas fa-heart text-2xl text-red-500 mb-2"></i>
+                        <p class="text-xs font-bold">Сүйіктілер</p>
+                        <p id="count-favorite" class="text-xl font-black text-red-500">0</p>
+                    </div>
+                    <div class="p-4 rounded-xl border text-center">
+                        <i class="fas fa-check-circle text-2xl text-green-500 mb-2"></i>
+                        <p class="text-xs font-bold">Көрді</p>
+                        <p id="count-completed" class="text-xl font-black text-green-500">0</p>
+                    </div>
+                    <div class="p-4 rounded-xl border text-center">
+                        <i class="fas fa-clock text-2xl text-blue-500 mb-2"></i>
+                        <p class="text-xs font-bold">Жоспарда</p>
+                        <p id="count-planned" class="text-xl font-black text-blue-500">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl p-6 border mb-6">
+                <h2 class="text-xl font-bold text-orange-500 mb-4">Бағалары</h2>
+                <div id="user-ratings" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+            </div>
+
+            <div class="rounded-2xl p-6 border">
+                <h2 class="text-xl font-bold text-orange-500 mb-4">Соңғы пікірлер</h2>
+                <div id="recent-comments" class="space-y-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyB3Tf0kqjLPinrVrcxzB_0Niy3RIL9FJ5Q", authDomain: "kushti-anime.firebaseapp.com", projectId: "kushti-anime", storageBucket: "kushti-anime.firebasestorage.app", messagingSenderId: "539636802828", appId: "1:539636802828:web:9d6d7877d88ac452d61529", measurementId: "G-7ZTFL5TVCS" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const userId = new URLSearchParams(window.location.search).get('uid');
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        window.addEventListener('online', () => { document.getElementById('offline-banner').classList.add('hidden'); showToast('Интернет қосылды', 'success'); });
+        window.addEventListener('offline', () => { document.getElementById('offline-banner').classList.remove('hidden'); });
+
+        function applyTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            const body = document.body;
+            const nav = document.querySelector('nav');
+            
+            if (theme === 'dark') {
+                body.classList.add('bg-black', 'text-white');
+                body.classList.remove('bg-white', 'text-gray-900');
+                nav.classList.add('bg-zinc-900', 'border-zinc-800');
+                nav.classList.remove('bg-white', 'border-gray-200');
+                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+            } else {
+                body.classList.add('bg-white', 'text-gray-900');
+                body.classList.remove('bg-black', 'text-white');
+                nav.classList.add('bg-white', 'border-gray-200');
+                nav.classList.remove('bg-zinc-900', 'border-zinc-800');
+                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+            }
+        }
+
+        window.toggleTheme = () => {
+            const current = localStorage.getItem('theme') || 'dark';
+            localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
+            applyTheme();
+        };
+
+        applyTheme();
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadUserProfile() {
+            if (!userId) {
+                document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Пайдаланушы ID жоқ</p>';
+                return;
+            }
+
+            try {
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (!userDoc.exists()) {
+                    document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Пайдаланушы табылмады</p>';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                const username = userData.username || 'Unknown';
+                
+                document.getElementById('user-name').innerText = `@${username}`;
+                document.getElementById('user-bio').innerText = userData.bio || 'Био жоқ';
+                document.getElementById('user-avatar').innerText = username.charAt(0).toUpperCase();
+
+                if (auth.currentUser) {
+                    const userRole = await getDoc(doc(db, "users", auth.currentUser.uid));
+                    if (userRole.exists() && (userRole.data().role === 'admin' || userRole.data().role === 'moderator')) {
+                        document.getElementById('admin-btn').classList.remove('hidden');
+                    }
+                    await loadActionButtons(userId, username);
+                }
+
+                await loadCollections(userId);
+                await loadRatings(userId, username);
+                await loadStats(userId, username);
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('profile-content').classList.remove('hidden');
+            } catch(e) {
+                console.error('Profile load error:', e);
+                document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Жүктеу қатесі!</p>';
+            }
+        }
+
+        async function loadCollections(userId) {
+            const theme = localStorage.getItem('theme') || 'dark';
+            const cardBg = theme === 'dark' ? 'bg-zinc-900' : 'bg-white';
+            
+            const types = ['watching', 'favorite', 'completed', 'planned'];
+            for (const type of types) {
+                const q = query(collection(db, "collections"), where("userId", "==", userId), where("type", "==", type));
+                const snap = await getDocs(q);
+                document.getElementById(`count-${type}`).innerText = snap.size;
+            }
+        }
+
+        async function loadRatings(userId, username) {
+            const ratingsQuery = query(collection(db, "ratings"), where("userId", "==", userId), orderBy("timestamp", "desc"), limit(8));
+            const ratingsSnap = await getDocs(ratingsQuery);
+            
+            const ratingsList = document.getElementById('user-ratings');
+            ratingsList.innerHTML = '';
+
+            if (ratingsSnap.empty) {
+                ratingsList.innerHTML = '<p class="col-span-full text-center opacity-60 text-sm py-4">Бағалар жоқ</p>';
+                return;
+            }
+
+            const theme = localStorage.getItem('theme') || 'dark';
+            const cardBg = theme === 'dark' ? 'bg-zinc-900' : 'bg-white';
+            const cardBorder = theme === 'dark' ? 'border-zinc-800' : 'border-gray-300';
+
+            for (const d of ratingsSnap.docs) {
+                const rating = d.data();
+                const animeDoc = await getDoc(doc(db, "content", rating.animeId));
+                
+                if (animeDoc.exists()) {
+                    const anime = animeDoc.data();
+                    ratingsList.innerHTML += `<div class="${cardBg} rounded-xl border ${cardBorder} overflow-hidden cursor-pointer hover:border-orange-500 transition" onclick="location.href='details.html?id=${rating.animeId}'">
+                        <img src="${anime.poster_url}" class="w-full aspect-[2/3] object-cover">
+                        <div class="p-2 text-center">
+                            <p class="text-orange-500 font-bold text-sm">${'⭐'.repeat(rating.stars)}</p>
+                        </div>
+                    </div>`;
+                }
+            }
+        }
+
+        async function loadStats(userId, username) {
+            const theme = localStorage.getItem('theme') || 'dark';
+            const cardBg = theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200';
+            const cardBorder = theme === 'dark' ? 'border-zinc-700' : 'border-gray-300';
+            
+            const commentsQuery = query(collection(db, "comments"), where("username", "==", username));
+            const commentsSnap = await getDocs(commentsQuery);
+            document.getElementById('comments-count').innerText = commentsSnap.size;
+
+            const recentQuery = query(collection(db, "comments"), where("username", "==", username), orderBy("time", "desc"), limit(5));
+            const recentSnap = await getDocs(recentQuery);
+            
+            const commentsList = document.getElementById('recent-comments');
+            commentsList.innerHTML = '';
+            
+            if (recentSnap.empty) {
+                commentsList.innerHTML = '<p class="opacity-60 text-sm text-center py-4">Пікірлер жоқ</p>';
+            } else {
+                for (const d of recentSnap.docs) {
+                    const comment = d.data();
+                    const animeDoc = await getDoc(doc(db, "content", comment.animeId));
+                    const animeTitle = animeDoc.exists() ? animeDoc.data().title_kz : 'Аниме';
+                    
+                    const date = new Date(comment.time).toLocaleDateString('kk-KZ', { day: 'numeric', month: 'short' });
+                    
+                    commentsList.innerHTML += `<div class="${cardBg} p-4 rounded-xl border ${cardBorder} hover:border-orange-500 transition cursor-pointer" onclick="location.href='details.html?id=${comment.animeId}'">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-orange-500 text-xs font-bold">${escapeHtml(animeTitle)}</span>
+                            <span class="opacity-40 text-[10px]">${date}</span>
+                        </div>
+                        <p class="text-sm opacity-80">${escapeHtml(comment.text)}</p>
+                    </div>`;
+                }
+            }
+
+            const ratingsQuery = query(collection(db, "ratings"), where("userId", "==", userId));
+            const ratingsSnap = await getDocs(ratingsQuery);
+            document.getElementById('ratings-count').innerText = ratingsSnap.size;
+
+            let totalStars = 0;
+            ratingsSnap.forEach(d => { totalStars += d.data().stars; });
+            const avgRating = ratingsSnap.size > 0 ? (totalStars / ratingsSnap.size).toFixed(1) : '0.0';
+            document.getElementById('avg-rating').innerText = avgRating;
+
+            const friendsQuery = query(collection(db, "friends"), where("userId", "==", userId));
+            const friendsSnap = await getDocs(friendsQuery);
+            document.getElementById('friends-count').innerText = friendsSnap.size;
+        }
+
+        async function loadActionButtons(viewedUserId, viewedUsername) {
+            const buttonsDiv = document.getElementById('action-buttons');
+            buttonsDiv.innerHTML = '';
+
+            if (!auth.currentUser) {
+                buttonsDiv.innerHTML = `<button onclick="location.href='index.html'" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">Кіру</button>`;
+                return;
+            }
+
+            if (viewedUserId === auth.currentUser.uid) {
+                buttonsDiv.innerHTML = `<button onclick="location.href='profile.html'" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white"><i class="fas fa-edit mr-2"></i>Өңдеу</button>`;
+                return;
+            }
+
+            const friendStatus = await checkFriendship(viewedUserId);
+
+            if (friendStatus === 'friends') {
+                buttonsDiv.innerHTML = `
+                    <button onclick="location.href='direct.html?friendId=${viewedUserId}'" class="bg-green-600 px-6 py-3 rounded-xl font-bold hover:bg-green-700 text-white">
+                        <i class="fas fa-comment mr-2"></i>Жазу
+                    </button>
+                    <button onclick="removeFriend('${viewedUserId}')" class="bg-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-700 text-white">
+                        <i class="fas fa-user-minus mr-2"></i>Досқа алмау
+                    </button>
+                `;
+            } else if (friendStatus === 'pending') {
+                buttonsDiv.innerHTML = `<button class="bg-zinc-700 px-6 py-3 rounded-xl font-bold cursor-not-allowed text-white" disabled>
+                    <i class="fas fa-clock mr-2"></i>Сұраныс жіберілген
+                </button>`;
+            } else if (friendStatus === 'incoming') {
+                buttonsDiv.innerHTML = `<button onclick="location.href='profile.html'" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">
+                    <i class="fas fa-bell mr-2"></i>Сұранысты қараңыз
+                </button>`;
+            } else {
+                buttonsDiv.innerHTML = `<button onclick="sendRequest('${viewedUserId}', '${viewedUsername}')" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">
+                    <i class="fas fa-user-plus mr-2"></i>Досқа қосу
+                </button>`;
+            }
+        }
+
+        async function checkFriendship(friendId) {
+            if (!auth.currentUser) return 'none';
+            
+            const q1 = query(collection(db, "friends"), where("userId", "==", auth.currentUser.uid), where("friendId", "==", friendId));
+            const snap1 = await getDocs(q1);
+            if (!snap1.empty) return 'friends';
+
+            const q2 = query(collection(db, "friend_requests"), where("from", "==", auth.currentUser.uid), where("to", "==", friendId));
+            const snap2 = await getDocs(q2);
+            if (!snap2.empty) return 'pending';
+
+            const q3 = query(collection(db, "friend_requests"), where("from", "==", friendId), where("to", "==", auth.currentUser.uid));
+            const snap3 = await getDocs(q3);
+            if (!snap3.empty) return 'incoming';
+
+            return 'none';
+        }
+
+        // ИСПРАВЛЕНО: Запрос в друзья работает
+        window.sendRequest = async (toId, toUsername) => {
+            if (!auth.currentUser) {
+                showToast('Кіріңіз!', 'error');
+                return;
+            }
+            
+            try {
+                // Проверка на существующий запрос
+                const existingQuery = query(collection(db, "friend_requests"), 
+                    where("from", "==", auth.currentUser.uid),
+                    where("to", "==", toId));
+                const existingSnap = await getDocs(existingQuery);
+                
+                if (!existingSnap.empty) {
+                    showToast('Сұраныс бұрын жіберілген!', 'error');
+                    return;
+                }
+                
+                const myDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+                if (!myDoc.exists()) {
+                    showToast('Қате: Пайдаланушы деректері табылмады!', 'error');
+                    return;
+                }
+                
+                await addDoc(collection(db, "friend_requests"), {
+                    from: auth.currentUser.uid,
+                    fromUsername: myDoc.data().username,
+                    to: toId,
+                    toUsername: toUsername,
+                    time: Date.now()
+                });
+                showToast('Сұраныс жіберілді!', 'success');
+                await loadActionButtons(toId, toUsername);
+            } catch(e) {
+                console.error('Friend request error:', e);
+                showToast('Қате: ' + e.message, 'error');
+            }
+        };
+
+        window.removeFriend = async (friendId) => {
+            if (!confirm('Досты өшіруге сенімдісіз бе?')) return;
+            
+            try {
+                const q1 = query(collection(db, "friends"), where("userId", "==", auth.currentUser.uid), where("friendId", "==", friendId));
+                const snap1 = await getDocs(q1);
+                snap1.forEach(async d => await deleteDoc(d.ref));
+
+                const q2 = query(collection(db, "friends"), where("userId", "==", friendId), where("friendId", "==", auth.currentUser.uid));
+                const snap2 = await getDocs(q2);
+                snap2.forEach(async d => await deleteDoc(d.ref));
+
+                showToast('Дос өшірілді', 'success');
+                location.reload();
+            } catch(e) {
+                console.error(e);
+                showToast('Қате болды!', 'error');
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            await loadUserProfile();
+        });
+    </script>
+</body>
+</html>
