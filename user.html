@@ -13,6 +13,8 @@
         @keyframes slideOut { to { transform: translateX(400px); opacity: 0; } }
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #ea580c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-container { text-align: center; padding: 60px 20px; }
+        .error-icon { font-size: 64px; color: #ea580c; margin-bottom: 20px; }
     </style>
 </head>
 <body class="min-h-screen transition-colors duration-300">
@@ -31,6 +33,16 @@
 
     <main class="max-w-4xl mx-auto p-6">
         <div id="loading" class="loader"></div>
+        
+        <!-- Error Container -->
+        <div id="error-container" class="hidden error-container">
+            <i class="fas fa-user-slash error-icon"></i>
+            <h2 class="text-2xl font-bold text-orange-500 mb-4">Пайдаланушы табылмады</h2>
+            <p class="text-sm opacity-70 mb-6">Бұл профиль жоқ немесе жойылған</p>
+            <button onclick="location.href='index.html'" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">
+                Басты бетке оралу
+            </button>
+        </div>
         
         <div id="profile-content" class="hidden">
             <div class="rounded-[40px] p-8 border mb-6">
@@ -122,11 +134,16 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        const userId = new URLSearchParams(window.location.search).get('uid');
+        // Получаем userId из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('uid');
+
+        console.log('Requested userId:', userId); // Для отладки
 
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = 'toast';
+            toast.style.background = type === 'error' ? '#dc2626' : '#ea580c';
             toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>${message}`;
             document.body.appendChild(toast);
             setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
@@ -146,12 +163,20 @@
                 nav.classList.add('bg-zinc-900', 'border-zinc-800');
                 nav.classList.remove('bg-white', 'border-gray-200');
                 document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+                document.querySelectorAll('.border').forEach(el => {
+                    el.classList.add('border-zinc-800');
+                    el.classList.remove('border-gray-200');
+                });
             } else {
                 body.classList.add('bg-white', 'text-gray-900');
                 body.classList.remove('bg-black', 'text-white');
                 nav.classList.add('bg-white', 'border-gray-200');
                 nav.classList.remove('bg-zinc-900', 'border-zinc-800');
                 document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+                document.querySelectorAll('.border').forEach(el => {
+                    el.classList.add('border-gray-200');
+                    el.classList.remove('border-zinc-800');
+                });
             }
         }
 
@@ -169,137 +194,172 @@
             return div.innerHTML;
         }
 
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('profile-content').classList.add('hidden');
+            document.getElementById('error-container').classList.remove('hidden');
+        }
+
         async function loadUserProfile() {
+            // Проверка наличия userId
             if (!userId) {
-                document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Пайдаланушы ID жоқ</p>';
+                console.error('No userId provided');
+                showToast('Пайдаланушы ID көрсетілмеген!', 'error');
+                showError();
                 return;
             }
 
             try {
+                // Загружаем данные пользователя
                 const userDoc = await getDoc(doc(db, "users", userId));
+                
                 if (!userDoc.exists()) {
-                    document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Пайдаланушы табылмады</p>';
+                    console.error('User not found:', userId);
+                    showToast('Пайдаланушы табылмады!', 'error');
+                    showError();
                     return;
                 }
 
                 const userData = userDoc.data();
-                const username = userData.username || 'Unknown';
-                
-                document.getElementById('user-name').innerText = `@${username}`;
-                document.getElementById('user-bio').innerText = userData.bio || 'Био жоқ';
-                document.getElementById('user-avatar').innerText = username.charAt(0).toUpperCase();
+                console.log('User data loaded:', userData);
 
+                // Заполняем профиль
+                document.getElementById('user-name').innerText = '@' + (userData.username || 'User');
+                document.getElementById('user-avatar').innerText = (userData.username || 'U')[0].toUpperCase();
+                document.getElementById('user-bio').innerText = userData.bio || 'Био жоқ';
+
+                // Загружаем коллекции
+                await loadCollections(userId);
+
+                // Загружаем комментарии
+                await loadComments(userId);
+
+                // Загружаем рейтинги
+                await loadRatings(userId);
+
+                // Загружаем друзей
+                await loadFriends(userId);
+
+                // Загружаем кнопки действий
+                await loadActionButtons(userId, userData.username);
+
+                // Показываем профиль
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('profile-content').classList.remove('hidden');
+
+                // Проверяем роль для админ кнопки
                 if (auth.currentUser) {
-                    const userRole = await getDoc(doc(db, "users", auth.currentUser.uid));
-                    if (userRole.exists() && (userRole.data().role === 'admin' || userRole.data().role === 'moderator')) {
+                    const currentUserDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+                    if (currentUserDoc.exists() && (currentUserDoc.data().role === 'admin' || currentUserDoc.data().role === 'moderator')) {
                         document.getElementById('admin-btn').classList.remove('hidden');
                     }
-                    await loadActionButtons(userId, username);
                 }
 
-                await loadCollections(userId);
-                await loadRatings(userId, username);
-                await loadStats(userId, username);
-
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('profile-content').classList.remove('hidden');
-            } catch(e) {
-                console.error('Profile load error:', e);
-                document.getElementById('loading').innerHTML = '<p class="text-center text-red-500">Жүктеу қатесі!</p>';
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showToast('Профиль жүктелу қатесі: ' + error.message, 'error');
+                showError();
             }
         }
 
-        async function loadCollections(userId) {
-            const theme = localStorage.getItem('theme') || 'dark';
-            const cardBg = theme === 'dark' ? 'bg-zinc-900' : 'bg-white';
-            
-            const types = ['watching', 'favorite', 'completed', 'planned'];
-            for (const type of types) {
-                const q = query(collection(db, "collections"), where("userId", "==", userId), where("type", "==", type));
-                const snap = await getDocs(q);
-                document.getElementById(`count-${type}`).innerText = snap.size;
-            }
-        }
-
-        async function loadRatings(userId, username) {
-            const ratingsQuery = query(collection(db, "ratings"), where("userId", "==", userId), orderBy("timestamp", "desc"), limit(8));
-            const ratingsSnap = await getDocs(ratingsQuery);
-            
-            const ratingsList = document.getElementById('user-ratings');
-            ratingsList.innerHTML = '';
-
-            if (ratingsSnap.empty) {
-                ratingsList.innerHTML = '<p class="col-span-full text-center opacity-60 text-sm py-4">Бағалар жоқ</p>';
-                return;
-            }
-
-            const theme = localStorage.getItem('theme') || 'dark';
-            const cardBg = theme === 'dark' ? 'bg-zinc-900' : 'bg-white';
-            const cardBorder = theme === 'dark' ? 'border-zinc-800' : 'border-gray-300';
-
-            for (const d of ratingsSnap.docs) {
-                const rating = d.data();
-                const animeDoc = await getDoc(doc(db, "content", rating.animeId));
+        async function loadCollections(uid) {
+            try {
+                const collections = ['watching', 'favorite', 'completed', 'planned'];
                 
-                if (animeDoc.exists()) {
-                    const anime = animeDoc.data();
-                    ratingsList.innerHTML += `<div class="${cardBg} rounded-xl border ${cardBorder} overflow-hidden cursor-pointer hover:border-orange-500 transition" onclick="location.href='details.html?id=${rating.animeId}'">
-                        <img src="${anime.poster_url}" class="w-full aspect-[2/3] object-cover">
-                        <div class="p-2 text-center">
-                            <p class="text-orange-500 font-bold text-sm">${'⭐'.repeat(rating.stars)}</p>
-                        </div>
-                    </div>`;
+                for (const type of collections) {
+                    const q = query(collection(db, "collections"), where("userId", "==", uid), where("type", "==", type));
+                    const snap = await getDocs(q);
+                    document.getElementById(`count-${type}`).innerText = snap.size;
                 }
+            } catch (error) {
+                console.error('Error loading collections:', error);
             }
         }
 
-        async function loadStats(userId, username) {
-            const theme = localStorage.getItem('theme') || 'dark';
-            const cardBg = theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200';
-            const cardBorder = theme === 'dark' ? 'border-zinc-700' : 'border-gray-300';
-            
-            const commentsQuery = query(collection(db, "comments"), where("username", "==", username));
-            const commentsSnap = await getDocs(commentsQuery);
-            document.getElementById('comments-count').innerText = commentsSnap.size;
+        async function loadComments(uid) {
+            try {
+                const commentsQuery = query(
+                    collection(db, "comments"), 
+                    where("userId", "==", uid),
+                    orderBy("time", "desc"),
+                    limit(5)
+                );
+                const commentsSnap = await getDocs(commentsQuery);
+                
+                document.getElementById('comments-count').innerText = commentsSnap.size;
 
-            const recentQuery = query(collection(db, "comments"), where("username", "==", username), orderBy("time", "desc"), limit(5));
-            const recentSnap = await getDocs(recentQuery);
-            
-            const commentsList = document.getElementById('recent-comments');
-            commentsList.innerHTML = '';
-            
-            if (recentSnap.empty) {
-                commentsList.innerHTML = '<p class="opacity-60 text-sm text-center py-4">Пікірлер жоқ</p>';
-            } else {
-                for (const d of recentSnap.docs) {
-                    const comment = d.data();
+                const commentsContainer = document.getElementById('recent-comments');
+                commentsContainer.innerHTML = '';
+
+                for (const commentDoc of commentsSnap.docs) {
+                    const comment = commentDoc.data();
                     const animeDoc = await getDoc(doc(db, "content", comment.animeId));
-                    const animeTitle = animeDoc.exists() ? animeDoc.data().title_kz : 'Аниме';
-                    
-                    const date = new Date(comment.time).toLocaleDateString('kk-KZ', { day: 'numeric', month: 'short' });
-                    
-                    commentsList.innerHTML += `<div class="${cardBg} p-4 rounded-xl border ${cardBorder} hover:border-orange-500 transition cursor-pointer" onclick="location.href='details.html?id=${comment.animeId}'">
-                        <div class="flex justify-between items-start mb-2">
+                    const animeTitle = animeDoc.exists() ? animeDoc.data().title : 'Белгісіз';
+                    const date = new Date(comment.time).toLocaleDateString('kk-KZ');
+
+                    commentsContainer.innerHTML += `
+                    <div class="p-4 rounded-xl border">
+                        <div class="flex justify-between mb-2">
                             <span class="text-orange-500 text-xs font-bold">${escapeHtml(animeTitle)}</span>
                             <span class="opacity-40 text-[10px]">${date}</span>
                         </div>
                         <p class="text-sm opacity-80">${escapeHtml(comment.text)}</p>
                     </div>`;
                 }
+
+                if (commentsSnap.empty) {
+                    commentsContainer.innerHTML = '<p class="text-sm opacity-50 text-center py-4">Пікірлер жоқ</p>';
+                }
+            } catch (error) {
+                console.error('Error loading comments:', error);
             }
+        }
 
-            const ratingsQuery = query(collection(db, "ratings"), where("userId", "==", userId));
-            const ratingsSnap = await getDocs(ratingsQuery);
-            document.getElementById('ratings-count').innerText = ratingsSnap.size;
+        async function loadRatings(uid) {
+            try {
+                const ratingsQuery = query(collection(db, "ratings"), where("userId", "==", uid));
+                const ratingsSnap = await getDocs(ratingsQuery);
+                document.getElementById('ratings-count').innerText = ratingsSnap.size;
 
-            let totalStars = 0;
-            ratingsSnap.forEach(d => { totalStars += d.data().stars; });
-            const avgRating = ratingsSnap.size > 0 ? (totalStars / ratingsSnap.size).toFixed(1) : '0.0';
-            document.getElementById('avg-rating').innerText = avgRating;
+                let totalStars = 0;
+                const ratingsContainer = document.getElementById('user-ratings');
+                ratingsContainer.innerHTML = '';
 
-            const friendsQuery = query(collection(db, "friends"), where("userId", "==", userId));
-            const friendsSnap = await getDocs(friendsQuery);
-            document.getElementById('friends-count').innerText = friendsSnap.size;
+                for (const ratingDoc of ratingsSnap.docs) {
+                    const rating = ratingDoc.data();
+                    totalStars += rating.stars || 0;
+
+                    const animeDoc = await getDoc(doc(db, "content", rating.animeId));
+                    if (animeDoc.exists()) {
+                        const anime = animeDoc.data();
+                        ratingsContainer.innerHTML += `
+                        <div class="p-3 rounded-xl border text-center">
+                            <img src="${anime.poster || '/placeholder.jpg'}" class="w-full h-32 object-cover rounded-lg mb-2" alt="${escapeHtml(anime.title)}">
+                            <p class="text-xs font-bold truncate">${escapeHtml(anime.title)}</p>
+                            <div class="text-orange-500 font-bold mt-1">${rating.stars}/10</div>
+                        </div>`;
+                    }
+                }
+
+                const avgRating = ratingsSnap.size > 0 ? (totalStars / ratingsSnap.size).toFixed(1) : '0.0';
+                document.getElementById('avg-rating').innerText = avgRating;
+
+                if (ratingsSnap.empty) {
+                    ratingsContainer.innerHTML = '<p class="text-sm opacity-50 text-center py-4 col-span-full">Бағалар жоқ</p>';
+                }
+            } catch (error) {
+                console.error('Error loading ratings:', error);
+            }
+        }
+
+        async function loadFriends(uid) {
+            try {
+                const friendsQuery = query(collection(db, "friends"), where("userId", "==", uid));
+                const friendsSnap = await getDocs(friendsQuery);
+                document.getElementById('friends-count').innerText = friendsSnap.size;
+            } catch (error) {
+                console.error('Error loading friends:', error);
+            }
         }
 
         async function loadActionButtons(viewedUserId, viewedUsername) {
@@ -336,7 +396,7 @@
                     <i class="fas fa-bell mr-2"></i>Сұранысты қараңыз
                 </button>`;
             } else {
-                buttonsDiv.innerHTML = `<button onclick="sendRequest('${viewedUserId}', '${viewedUsername}')" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">
+                buttonsDiv.innerHTML = `<button onclick="sendRequest('${viewedUserId}', '${escapeHtml(viewedUsername)}')" class="bg-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-700 text-white">
                     <i class="fas fa-user-plus mr-2"></i>Досқа қосу
                 </button>`;
             }
@@ -345,22 +405,26 @@
         async function checkFriendship(friendId) {
             if (!auth.currentUser) return 'none';
             
-            const q1 = query(collection(db, "friends"), where("userId", "==", auth.currentUser.uid), where("friendId", "==", friendId));
-            const snap1 = await getDocs(q1);
-            if (!snap1.empty) return 'friends';
+            try {
+                const q1 = query(collection(db, "friends"), where("userId", "==", auth.currentUser.uid), where("friendId", "==", friendId));
+                const snap1 = await getDocs(q1);
+                if (!snap1.empty) return 'friends';
 
-            const q2 = query(collection(db, "friend_requests"), where("from", "==", auth.currentUser.uid), where("to", "==", friendId));
-            const snap2 = await getDocs(q2);
-            if (!snap2.empty) return 'pending';
+                const q2 = query(collection(db, "friend_requests"), where("from", "==", auth.currentUser.uid), where("to", "==", friendId));
+                const snap2 = await getDocs(q2);
+                if (!snap2.empty) return 'pending';
 
-            const q3 = query(collection(db, "friend_requests"), where("from", "==", friendId), where("to", "==", auth.currentUser.uid));
-            const snap3 = await getDocs(q3);
-            if (!snap3.empty) return 'incoming';
+                const q3 = query(collection(db, "friend_requests"), where("from", "==", friendId), where("to", "==", auth.currentUser.uid));
+                const snap3 = await getDocs(q3);
+                if (!snap3.empty) return 'incoming';
 
-            return 'none';
+                return 'none';
+            } catch (error) {
+                console.error('Error checking friendship:', error);
+                return 'none';
+            }
         }
 
-        // ИСПРАВЛЕНО: Запрос в друзья работает
         window.sendRequest = async (toId, toUsername) => {
             if (!auth.currentUser) {
                 showToast('Кіріңіз!', 'error');
@@ -392,6 +456,7 @@
                     toUsername: toUsername,
                     time: Date.now()
                 });
+                
                 showToast('Сұраныс жіберілді!', 'success');
                 await loadActionButtons(toId, toUsername);
             } catch(e) {
