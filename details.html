@@ -30,12 +30,15 @@
         <i class="fas fa-wifi-slash mr-2"></i>Интернет байланысы жоқ
     </div>
 
-    <nav class="p-4 border-b flex justify-between">
+    <nav class="p-4 border-b flex justify-between items-center">
         <button onclick="history.back()" class="text-white font-bold">← АРТҚА</button>
-        <span class="font-black italic text-white">Kushti</span>
+        <div class="flex items-center gap-2">
+            <img src="KushTi_new_Logo__1_.png" alt="Kushti Logo" class="w-8 h-8 object-contain">
+            <span class="font-black italic text-white">Kushti</span>
+        </div>
         <div class="flex gap-3 items-center">
             <button id="admin-btn" onclick="location.href='admin.html'" class="hidden text-orange-500" title="Админ панель"><i class="fas fa-shield-alt"></i></button>
-            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+            <button onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon text-white"></i></button>
         </div>
     </nav>
 
@@ -210,6 +213,9 @@
             const body = document.body;
             const nav = document.querySelector('nav');
             const textarea = document.querySelectorAll('textarea');
+            const icon = document.getElementById('theme-icon');
+            const navSpan = nav.querySelector('span');
+            const backBtn = nav.querySelector('button');
             
             if (theme === 'dark') {
                 body.classList.add('bg-black', 'text-white');
@@ -220,7 +226,17 @@
                     t.classList.add('bg-zinc-800', 'text-white', 'border-zinc-700');
                     t.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
                 });
-                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+                icon.classList.replace('fa-sun', 'fa-moon');
+                icon.classList.add('text-white');
+                icon.classList.remove('text-gray-900');
+                if(navSpan) {
+                    navSpan.classList.add('text-white');
+                    navSpan.classList.remove('text-gray-900');
+                }
+                if(backBtn) {
+                    backBtn.classList.add('text-white');
+                    backBtn.classList.remove('text-gray-900');
+                }
             } else {
                 body.classList.add('bg-white', 'text-gray-900');
                 body.classList.remove('bg-black', 'text-white');
@@ -230,7 +246,17 @@
                     t.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
                     t.classList.remove('bg-zinc-800', 'text-white', 'border-zinc-700');
                 });
-                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+                icon.classList.replace('fa-moon', 'fa-sun');
+                icon.classList.remove('text-white');
+                icon.classList.add('text-gray-900');
+                if(navSpan) {
+                    navSpan.classList.remove('text-white');
+                    navSpan.classList.add('text-gray-900');
+                }
+                if(backBtn) {
+                    backBtn.classList.remove('text-white');
+                    backBtn.classList.add('text-gray-900');
+                }
             }
         }
 
