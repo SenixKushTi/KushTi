@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kushti – Онлайн кино платформасы</title>
+    <title>Контент өңдеу — KushTi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -29,146 +29,140 @@
         @keyframes slideOut {
             to { transform: translateX(400px); opacity: 0; }
         }
-        .loader {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #ea580c;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 40px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .category-btn, .genre-btn {
+        .genre-checkbox {
+            cursor: pointer;
             transition: all 0.2s ease;
         }
-        .category-btn:hover, .genre-btn:hover {
-            transform: translateY(-2px);
-        }
-        .category-btn.active {
-            background: #ea580c;
-            color: white;
-        }
-        .genre-btn.active {
-            background: #ea580c;
-            color: white;
+        .genre-checkbox:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
-<body class="transition-colors duration-300">
-    <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm z-50">
-        <i class="fas fa-wifi-slash mr-2"></i>Интернет байланысы жоқ
-    </div>
-
-    <nav class="p-4 border-b sticky top-0 z-40 flex justify-between items-center backdrop-blur-lg">
-        <div class="flex items-center gap-3">
-            <!-- Логотип -->
-            <img src="KushTi_new_Logo__1_.png" alt="Kushti Logo" class="w-10 h-10 object-contain">
-            <h1 class="text-2xl md:text-3xl font-black text-white italic uppercase">Kushti</h1>
-        </div>
-        <div class="flex gap-4 items-center">
-            <button onclick="toggleTheme()" class="text-xl text-white"><i id="theme-icon" class="fas fa-moon"></i></button>
-            <button onclick="location.href='chat.html'" class="text-xl text-white"><i class="fas fa-comments"></i></button>
-            <button id="admin-btn" onclick="location.href='admin.html'" class="hidden text-xl text-orange-500" title="Админ панель"><i class="fas fa-shield-alt"></i></button>
-            <div id="auth-ui"><button onclick="openM()" class="bg-orange-600 px-4 py-2 rounded-xl font-bold text-sm text-white">КІРУ</button></div>
-            <div id="user-ui" class="hidden flex items-center gap-3">
-                <span id="u-name" onclick="location.href='profile.html'" class="text-orange-400 font-bold cursor-pointer text-sm underline"></span>
-            </div>
+<body class="bg-[#0b0f1a] text-white min-h-screen">
+    <nav class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
+        <button onclick="location.href='admin.html'" class="text-orange-500"><i class="fas fa-chevron-left text-xl"></i></button>
+        <h1 class="text-2xl font-black text-orange-500 italic">КОНТЕНТ ӨҢДЕУ</h1>
+        <div class="flex gap-4">
+            <button onclick="location.href='index.html'" class="text-orange-500"><i class="fas fa-home mr-2"></i>Басты бет</button>
+            <button onclick="signOut()" class="text-red-500"><i class="fas fa-sign-out-alt mr-2"></i>Шығу</button>
         </div>
     </nav>
 
-    <main class="container mx-auto p-4">
-        <!-- Категории -->
-        <div class="mb-6">
-            <h2 class="text-white font-bold mb-3 text-lg">Категориялар</h2>
-            <div class="flex gap-3 flex-wrap">
-                <button onclick="filterByCategory('all')" class="category-btn active px-6 py-3 rounded-xl font-bold text-sm border border-zinc-700 bg-orange-600 text-white">
-                    Барлығы
-                </button>
-                <button onclick="filterByCategory('anime')" class="category-btn px-6 py-3 rounded-xl font-bold text-sm border border-zinc-700 text-white">
-                    🎌 Аниме
-                </button>
-                <button onclick="filterByCategory('series')" class="category-btn px-6 py-3 rounded-xl font-bold text-sm border border-zinc-700 text-white">
-                    📺 Сериалдар
-                </button>
-                <button onclick="filterByCategory('dorama')" class="category-btn px-6 py-3 rounded-xl font-bold text-sm border border-zinc-700 text-white">
-                    🎭 Дорама
-                </button>
+    <main class="max-w-6xl mx-auto p-4">
+        <div id="access-denied" class="hidden text-center py-20">
+            <i class="fas fa-lock text-6xl text-red-500 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">Қол жетімсіз!</h2>
+            <p class="opacity-60">Сізде админ құқығы жоқ.</p>
+            <button onclick="location.href='index.html'" class="mt-4 bg-orange-600 px-6 py-3 rounded-xl">Басты бетке қайту</button>
+        </div>
+
+        <div id="edit-panel" class="hidden">
+            <!-- Редактирование контента -->
+            <div class="bg-slate-900 rounded-3xl p-6 mb-6 border border-slate-800">
+                <h2 class="text-xl font-bold text-orange-500 mb-4 uppercase flex items-center gap-2">
+                    <i class="fas fa-edit"></i>
+                    Контентті өңдеу
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm mb-2 opacity-70">Атауы (қазақша)</label>
+                        <input type="text" id="title-kz" class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-slate-700 focus:border-orange-500" placeholder="Мысалы: Наруто">
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-2 opacity-70">Постер URL</label>
+                        <input type="text" id="poster-url" class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-slate-700 focus:border-orange-500" placeholder="https://...">
+                    </div>
+                </div>
+
+                <!-- Категория -->
+                <div class="mb-4">
+                    <label class="block text-sm mb-2 opacity-70">Категория</label>
+                    <select id="category-select" class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-slate-700 focus:border-orange-500">
+                        <option value="anime">🎌 Аниме</option>
+                        <option value="series">📺 Сериал</option>
+                        <option value="dorama">🎭 Дорама</option>
+                    </select>
+                </div>
+
+                <!-- Жанры -->
+                <div class="mb-4">
+                    <label class="block text-sm mb-2 opacity-70">Жанрлар (бірнешеуін таңдауға болады)</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="action" class="genre-cb">
+                            <span class="text-sm">Экшн</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="comedy" class="genre-cb">
+                            <span class="text-sm">Комедия</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="drama" class="genre-cb">
+                            <span class="text-sm">Драма</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="romance" class="genre-cb">
+                            <span class="text-sm">Романтика</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="fantasy" class="genre-cb">
+                            <span class="text-sm">Фэнтези</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="horror" class="genre-cb">
+                            <span class="text-sm">Қорқынышты</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="thriller" class="genre-cb">
+                            <span class="text-sm">Триллер</span>
+                        </label>
+                        <label class="genre-checkbox flex items-center gap-2 bg-slate-800 p-3 rounded-lg cursor-pointer hover:bg-slate-700">
+                            <input type="checkbox" value="scifi" class="genre-cb">
+                            <span class="text-sm">Ғылыми фантастика</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm mb-2 opacity-70">Сипаттама (қазақша)</label>
+                    <textarea id="description-kz" class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-slate-700 focus:border-orange-500 h-24" placeholder="Контент туралы қысқаша..."></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm mb-2 opacity-70">Бір видео URL (егер бір ғана видео болса)</label>
+                    <input type="text" id="single-video-url" class="w-full bg-slate-800 p-3 rounded-xl outline-none border border-slate-700 focus:border-orange-500" placeholder="Опциялық: https://drive.google.com/... немесе https://youtube.com/...">
+                    <p class="text-xs opacity-50 mt-1">💡 Google Drive үшін: Share → Anyone with link → Copy link</p>
+                </div>
+
+                <div class="border-t border-slate-700 pt-4 mt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm opacity-70">Бөлімдер (серии)</label>
+                        <button onclick="addEpisodeField()" class="bg-blue-600 px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                            <i class="fas fa-plus mr-2"></i>Бөлім қосу
+                        </button>
+                    </div>
+                    <div id="episodes-container" class="space-y-2">
+                        <!-- Эпизоды будут добавляться сюда -->
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="updateContent()" class="flex-1 bg-gradient-to-r from-orange-600 to-red-600 py-4 rounded-xl font-bold uppercase hover:shadow-xl transition">
+                        <i class="fas fa-save mr-2"></i>Өзгерістерді сақтау
+                    </button>
+                    <button onclick="location.href='admin.html'" class="bg-slate-700 px-6 py-4 rounded-xl font-bold uppercase hover:bg-slate-600 transition">
+                        <i class="fas fa-times mr-2"></i>Болдырмау
+                    </button>
+                </div>
             </div>
         </div>
-
-        <!-- Жанры -->
-        <div class="mb-6">
-            <h2 class="text-white font-bold mb-3 text-lg">Жанрлар</h2>
-            <div class="flex gap-2 flex-wrap">
-                <button onclick="filterByGenre('all')" class="genre-btn active px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 bg-orange-600 text-white">
-                    Барлығы
-                </button>
-                <button onclick="filterByGenre('action')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Экшн
-                </button>
-                <button onclick="filterByGenre('comedy')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Комедия
-                </button>
-                <button onclick="filterByGenre('drama')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Драма
-                </button>
-                <button onclick="filterByGenre('romance')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Романтика
-                </button>
-                <button onclick="filterByGenre('fantasy')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Фэнтези
-                </button>
-                <button onclick="filterByGenre('horror')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Қорқынышты
-                </button>
-                <button onclick="filterByGenre('thriller')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Триллер
-                </button>
-                <button onclick="filterByGenre('scifi')" class="genre-btn px-4 py-2 rounded-lg text-xs font-bold border border-zinc-700 text-white">
-                    Ғылыми фантастика
-                </button>
-            </div>
-        </div>
-
-        <!-- Сортировка -->
-        <div class="mb-6 flex justify-between items-center">
-            <h2 class="text-white font-bold text-lg">Контент</h2>
-            <select id="sort-select" onchange="sortContent()" class="bg-zinc-800 text-white px-4 py-2 rounded-xl border border-zinc-700 text-sm font-bold">
-                <option value="newest">Жаңадан ескіге</option>
-                <option value="rating">Рейтинг бойынша</option>
-                <option value="views">Көрілімдер бойынша</option>
-                <option value="title">Атауы бойынша</option>
-            </select>
-        </div>
-
-        <div id="loading" class="loader"></div>
-        <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 hidden"></div>
     </main>
-
-    <!-- Модальное окно авторизации -->
-    <div id="auth-m" class="hidden fixed inset-0 bg-black/90 flex justify-center items-center z-[100] p-4">
-        <div id="modal-container" class="bg-zinc-900 p-6 rounded-3xl w-full max-w-sm border border-zinc-800">
-            <h2 id="m-t" class="text-xl font-bold mb-6 text-orange-500 text-center uppercase">Кіру</h2>
-            <div id="reg-fields" class="hidden">
-                <input type="text" id="m-un" placeholder="Никнейм" class="w-full p-4 rounded-xl mb-3 outline-none border border-zinc-700 bg-zinc-800 text-white focus:border-orange-500">
-                <p class="text-[10px] mb-3 opacity-60 text-white">Никнейм: 3-20 символ, тек әріптер/сандар</p>
-            </div>
-            <input type="email" id="m-e" placeholder="Email" class="w-full p-4 rounded-xl mb-3 outline-none border border-zinc-700 bg-zinc-800 text-white focus:border-orange-500">
-            <input type="password" id="m-p" placeholder="Құпия сөз (мин. 6 символ)" class="w-full p-4 rounded-xl mb-6 outline-none border border-zinc-700 bg-zinc-800 text-white focus:border-orange-500">
-            <button onclick="authAcc()" id="m-b" class="w-full bg-orange-600 py-4 rounded-xl font-black uppercase tracking-widest text-white">Растау</button>
-            <p id="toggle-text" class="mt-4 text-center text-xs opacity-60 text-white">Аккаунт жоқ па? <span onclick="toggleMode()" class="text-orange-500 cursor-pointer">Тіркелу</span></p>
-            <button onclick="closeM()" class="w-full mt-4 text-[10px] opacity-40 uppercase text-white">Жабу</button>
-        </div>
-    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB3Tf0kqjLPinrVrcxzB_0Niy3RIL9FJ5Q",
@@ -183,10 +177,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let allContent = [];
-        let currentCategory = 'all';
-        let currentGenre = 'all';
-        let currentSort = 'newest';
+        let episodeCount = 0;
+        let contentId = null;
 
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
@@ -199,276 +191,183 @@
             }, 3000);
         }
 
-        window.addEventListener('online', () => {
-            document.getElementById('offline-banner').classList.add('hidden');
-            showToast('Интернет қосылды', 'success');
-        });
-        window.addEventListener('offline', () => {
-            document.getElementById('offline-banner').classList.remove('hidden');
-        });
+        // Получаем ID из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        contentId = urlParams.get('id');
 
-        function applyTheme() {
-            const theme = localStorage.getItem('theme') || 'dark';
-            const body = document.body;
-            const nav = document.querySelector('nav');
-            const modalContainer = document.getElementById('modal-container');
-            const inputs = document.querySelectorAll('#auth-m input');
-            const toggleText = document.getElementById('toggle-text');
-            
-            if (theme === 'dark') {
-                body.classList.add('bg-black', 'text-white');
-                body.classList.remove('bg-white', 'text-gray-900');
-                nav.classList.add('bg-zinc-900', 'border-zinc-800');
-                nav.classList.remove('bg-white', 'border-gray-200');
-                if (modalContainer) {
-                    modalContainer.classList.add('bg-zinc-900', 'border-zinc-700');
-                    modalContainer.classList.remove('bg-white', 'border-gray-300');
+        if (!contentId) {
+            showToast('Контент табылмады!', 'error');
+            setTimeout(() => location.href = 'admin.html', 2000);
+        }
+
+        window.addEpisodeField = () => {
+            episodeCount++;
+            const container = document.getElementById('episodes-container');
+            const episodeDiv = document.createElement('div');
+            episodeDiv.className = 'flex gap-2 items-center bg-slate-800 p-3 rounded-xl';
+            episodeDiv.innerHTML = `
+                <span class="text-orange-500 font-bold w-20">Бөлім ${episodeCount}</span>
+                <input type="text" class="episode-url flex-1 bg-slate-700 p-2 rounded-lg outline-none border border-slate-600 focus:border-orange-500 text-sm" placeholder="Video URL (Google Drive, YouTube...)">
+                <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-400">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(episodeDiv);
+        };
+
+        async function loadContent() {
+            try {
+                const docRef = doc(db, "content", contentId);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    showToast('Контент табылмады!', 'error');
+                    setTimeout(() => location.href = 'admin.html', 2000);
+                    return;
                 }
-                inputs.forEach(input => {
-                    input.classList.add('bg-zinc-800', 'text-white', 'border-zinc-700');
-                    input.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
-                });
-                if (toggleText) {
-                    toggleText.classList.add('text-gray-400');
-                    toggleText.classList.remove('text-gray-600');
+
+                const data = docSnap.data();
+
+                // Заполняем форму
+                document.getElementById('title-kz').value = data.title_kz || '';
+                document.getElementById('poster-url').value = data.poster_url || '';
+                document.getElementById('description-kz').value = data.description_kz || '';
+                document.getElementById('single-video-url').value = data.video_url || '';
+                document.getElementById('category-select').value = data.category || 'anime';
+
+                // Устанавливаем жанры
+                if (data.genres && Array.isArray(data.genres)) {
+                    data.genres.forEach(genre => {
+                        const checkbox = document.querySelector(`.genre-cb[value="${genre}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
                 }
-                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
-            } else {
-                body.classList.add('bg-white', 'text-gray-900');
-                body.classList.remove('bg-black', 'text-white');
-                nav.classList.add('bg-white', 'border-gray-200');
-                nav.classList.remove('bg-zinc-900', 'border-zinc-800');
-                if (modalContainer) {
-                    modalContainer.classList.add('bg-white', 'border-gray-300');
-                    modalContainer.classList.remove('bg-zinc-900', 'border-zinc-700');
+
+                // Загружаем эпизоды
+                if (data.episodes && Array.isArray(data.episodes)) {
+                    const container = document.getElementById('episodes-container');
+                    container.innerHTML = '';
+                    data.episodes.forEach((ep, index) => {
+                        episodeCount = index + 1;
+                        const episodeDiv = document.createElement('div');
+                        episodeDiv.className = 'flex gap-2 items-center bg-slate-800 p-3 rounded-xl';
+                        episodeDiv.innerHTML = `
+                            <span class="text-orange-500 font-bold w-20">Бөлім ${ep.episode}</span>
+                            <input type="text" class="episode-url flex-1 bg-slate-700 p-2 rounded-lg outline-none border border-slate-600 focus:border-orange-500 text-sm" placeholder="Video URL" value="${ep.video_url || ''}">
+                            <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-400">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        `;
+                        container.appendChild(episodeDiv);
+                    });
                 }
-                inputs.forEach(input => {
-                    input.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
-                    input.classList.remove('bg-zinc-800', 'text-white', 'border-zinc-700');
-                });
-                if (toggleText) {
-                    toggleText.classList.add('text-gray-600');
-                    toggleText.classList.remove('text-gray-400');
-                }
-                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+
+                document.getElementById('edit-panel').classList.remove('hidden');
+            } catch(e) {
+                console.error('Load error:', e);
+                showToast('Жүктеу қатесі!', 'error');
             }
         }
 
-        window.toggleTheme = () => {
-            const current = localStorage.getItem('theme') || 'dark';
-            const newTheme = current === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', newTheme);
-            applyTheme();
-        };
+        window.updateContent = async () => {
+            const titleKz = document.getElementById('title-kz').value.trim();
+            const posterUrl = document.getElementById('poster-url').value.trim();
+            const descriptionKz = document.getElementById('description-kz').value.trim();
+            const singleVideoUrl = document.getElementById('single-video-url').value.trim();
+            const category = document.getElementById('category-select').value;
 
-        applyTheme();
-
-        let isR = false;
-        window.openM = () => {
-            document.getElementById('auth-m').classList.remove('hidden');
-            applyTheme();
-        };
-        window.closeM = () => document.getElementById('auth-m').classList.add('hidden');
-        window.toggleMode = () => {
-            isR = !isR;
-            document.getElementById('m-t').innerText = isR ? "Тіркелу" : "Кіру";
-            document.getElementById('reg-fields').classList.toggle('hidden', !isR);
-        };
-
-        function validateUsername(username) {
-            const trimmed = username.trim();
-            if (trimmed.length < 3 || trimmed.length > 20) {
-                return { valid: false, error: 'Никнейм 3-20 символ болуы керек' };
-            }
-            if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
-                return { valid: false, error: 'Тек әріптер, сандар және _ пайдаланыңыз' };
-            }
-            return { valid: true, username: trimmed.toLowerCase() };
-        }
-
-        async function isUsernameUnique(username) {
-            const q = query(collection(db, "users"), where("username", "==", username));
-            const snap = await getDocs(q);
-            return snap.empty;
-        }
-
-        window.authAcc = async () => {
-            const e = document.getElementById('m-e').value.trim();
-            const p = document.getElementById('m-p').value;
-            
-            if (!e || !p) {
+            if (!titleKz || !posterUrl || !descriptionKz) {
                 showToast('Барлық өрістерді толтырыңыз!', 'error');
                 return;
             }
 
-            if (p.length < 6) {
-                showToast('Құпия сөз кем дегенде 6 символ болуы керек!', 'error');
+            // Собираем жанры
+            const genres = [];
+            document.querySelectorAll('.genre-cb:checked').forEach(cb => {
+                genres.push(cb.value);
+            });
+
+            if (genres.length === 0) {
+                showToast('Кем дегенде бір жанр таңдаңыз!', 'error');
+                return;
+            }
+
+            // Собираем эпизоды
+            const episodeInputs = document.querySelectorAll('.episode-url');
+            const episodes = [];
+            episodeInputs.forEach((input, index) => {
+                const url = input.value.trim();
+                if (url) {
+                    episodes.push({
+                        episode: index + 1,
+                        video_url: url
+                    });
+                }
+            });
+
+            try {
+                const contentData = {
+                    title_kz: titleKz,
+                    poster_url: posterUrl,
+                    description_kz: descriptionKz,
+                    category: category,
+                    genres: genres,
+                    updatedAt: Date.now()
+                };
+
+                // Добавляем single video если есть
+                if (singleVideoUrl) {
+                    contentData.video_url = singleVideoUrl;
+                }
+
+                // Добавляем эпизоды если есть
+                if (episodes.length > 0) {
+                    contentData.episodes = episodes;
+                }
+
+                await updateDoc(doc(db, "content", contentId), contentData);
+                
+                showToast('Контент жаңартылды!', 'success');
+                setTimeout(() => location.href = 'admin.html', 1500);
+            } catch(e) {
+                console.error('Update error:', e);
+                showToast('Жаңарту қатесі!', 'error');
+            }
+        };
+
+        window.signOut = async () => {
+            if (confirm('Шығуға сенімдісіз бе?')) {
+                await fbSignOut(auth);
+                location.href = 'index.html';
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                location.href = 'index.html';
                 return;
             }
 
             try {
-                if(isR) {
-                    const un = document.getElementById('m-un').value;
-                    const validation = validateUsername(un);
-                    
-                    if (!validation.valid) {
-                        showToast(validation.error, 'error');
-                        return;
-                    }
-
-                    const isUnique = await isUsernameUnique(validation.username);
-                    if (!isUnique) {
-                        showToast('Бұл никнейм қолданыста. Басқасын таңдаңыз!', 'error');
-                        return;
-                    }
-
-                    const res = await createUserWithEmailAndPassword(auth, e, p);
-                    await setDoc(doc(db, "users", res.user.uid), { 
-                        username: validation.username, 
-                        email: e, 
-                        bio: "Kushti қолданушысы",
-                        role: "user",
-                        createdAt: Date.now()
-                    });
-                    showToast('Тіркелу сәтті! Қош келдіңіз!', 'success');
-                } else { 
-                    await signInWithEmailAndPassword(auth, e, p);
-                    showToast('Кіру сәтті!', 'success');
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (!userDoc.exists()) {
+                    document.getElementById('access-denied').classList.remove('hidden');
+                    return;
                 }
-                closeM();
-            } catch(err) { 
-                console.error(err);
-                const errors = {
-                    'auth/email-already-in-use': 'Бұл email қолданыста!',
-                    'auth/invalid-email': 'Email форматы дұрыс емес!',
-                    'auth/weak-password': 'Құпия сөз өте әлсіз!',
-                    'auth/user-not-found': 'Email немесе құпия сөз дұрыс емес!',
-                    'auth/wrong-password': 'Email немесе құпия сөз дұрыс емес!'
-                };
-                showToast(errors[err.code] || 'Қате: ' + err.message, 'error');
-            }
-        };
 
-        onAuthStateChanged(auth, async u => {
-            document.getElementById('auth-ui').classList.toggle('hidden', !!u);
-            document.getElementById('user-ui').classList.toggle('hidden', !u);
-            if(u) {
-                try {
-                    const s = await getDoc(doc(db, "users", u.uid));
-                    if(s.exists()) {
-                        document.getElementById('u-name').innerText = "@" + s.data().username;
-                        const role = s.data().role || 'user';
-                        if(role === 'admin' || role === 'moderator') {
-                            document.getElementById('admin-btn').classList.remove('hidden');
-                        }
-                    } else {
-                        document.getElementById('u-name').innerText = "Профиль";
-                    }
-                } catch(e) {
-                    console.error('User load error:', e);
+                const userData = userDoc.data();
+                const role = userData.role || 'user';
+
+                if (role !== 'admin' && role !== 'moderator') {
+                    document.getElementById('access-denied').classList.remove('hidden');
+                    return;
                 }
+
+                loadContent();
+            } catch(e) {
+                console.error('Auth error:', e);
+                document.getElementById('access-denied').classList.remove('hidden');
             }
-        });
-
-        // Фильтрация по категориям
-        window.filterByCategory = (category) => {
-            currentCategory = category;
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-orange-600');
-            });
-            event.target.classList.add('active', 'bg-orange-600');
-            renderContent();
-        };
-
-        // Фильтрация по жанрам
-        window.filterByGenre = (genre) => {
-            currentGenre = genre;
-            document.querySelectorAll('.genre-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-orange-600');
-            });
-            event.target.classList.add('active', 'bg-orange-600');
-            renderContent();
-        };
-
-        // Сортировка
-        window.sortContent = () => {
-            currentSort = document.getElementById('sort-select').value;
-            renderContent();
-        };
-
-        function renderContent() {
-            let filtered = [...allContent];
-
-            // Фильтрация по категории
-            if (currentCategory !== 'all') {
-                filtered = filtered.filter(item => item.category === currentCategory);
-            }
-
-            // Фильтрация по жанру
-            if (currentGenre !== 'all') {
-                filtered = filtered.filter(item => 
-                    item.genres && item.genres.includes(currentGenre)
-                );
-            }
-
-            // Сортировка
-            switch(currentSort) {
-                case 'rating':
-                    filtered.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
-                    break;
-                case 'views':
-                    filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
-                    break;
-                case 'title':
-                    filtered.sort((a, b) => (a.title_kz || '').localeCompare(b.title_kz || ''));
-                    break;
-                case 'newest':
-                default:
-                    filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                    break;
-            }
-
-            const g = document.getElementById('grid');
-            g.innerHTML = '';
-            
-            if (filtered.length === 0) {
-                g.innerHTML = '<p class="col-span-full text-center opacity-60 text-white">Контент табылмады</p>';
-                return;
-            }
-
-            const theme = localStorage.getItem('theme') || 'dark';
-            const cardBg = theme === 'dark' ? 'bg-zinc-900' : 'bg-white';
-            const cardBorder = theme === 'dark' ? 'border-zinc-800' : 'border-gray-300';
-            
-            filtered.forEach(item => {
-                const categoryIcon = item.category === 'anime' ? '🎌' : item.category === 'series' ? '📺' : '🎭';
-                g.innerHTML += `<div onclick="location.href='details.html?id=${item.id}'" class="${cardBg} rounded-2xl overflow-hidden border ${cardBorder} hover:border-orange-500 transition shadow-lg cursor-pointer">
-                    <div class="relative">
-                        <img src="${item.poster_url}" class="w-full aspect-[2/3] object-cover" alt="${item.title_kz || 'Контент'}">
-                        <div class="absolute top-2 left-2 bg-black/80 px-2 py-1 rounded-lg text-xs">${categoryIcon}</div>
-                        <div class="absolute top-2 right-2 bg-black/80 px-2 py-1 rounded-lg text-xs">⭐ ${(item.avgRating || 0).toFixed(1)}</div>
-                    </div>
-                    <div class="p-3">
-                        <div class="text-xs font-bold truncate text-white mb-1">${item.title_kz || 'Атауы жоқ'}</div>
-                        <div class="text-[10px] opacity-60 text-white">👁 ${item.views || 0} көрілім</div>
-                    </div>
-                </div>`;
-            });
-        }
-
-        onSnapshot(collection(db, "content"), s => {
-            const loading = document.getElementById('loading');
-            const g = document.getElementById('grid'); 
-            
-            loading.classList.add('hidden');
-            g.classList.remove('hidden');
-            
-            allContent = [];
-            s.forEach(d => {
-                allContent.push({ id: d.id, ...d.data() });
-            });
-
-            renderContent();
         });
     </script>
 </body>
